@@ -1,6 +1,6 @@
 # NPM Library Template
 
-This template is designed to get you setup with best practices and integrated tools for your new NPM library, so you can just focus on shipping awesome code!
+This template is designed to get you setup with best practices and integrated tools for your new NPM library, so you can just focus on shipping some awesome code!
 
 ## Table of Contents
 
@@ -30,6 +30,7 @@ This template includes a variety of features to streamline your development and 
 - :memo: **Issue Templates**: Predefined templates for Bug Reports and Feature Requests that help maintain a consistent structure for issues.
 - :shield: **Security**: SAST with [Dependabot](https://github.com/dependabot) for automated security checks to identify and fix security vulnerabilities early in the development process.
 - :test_tube: **Testing**: Unit testing setup with [Jest](https://github.com/jestjs/jest) for thorough testing of your code to catch and fix bugs before they reach production.
+- :art: **Tailwind CSS Support**: Optional integration with [Tailwind CSS](https://tailwindcss.com/) for React libraries, providing a utility-first CSS framework that can be composed to build any design, directly in your markup.
 
 ## Getting Started
 
@@ -47,7 +48,7 @@ To set up your library, you will need to run the initialization commands provide
 - A description for the library. This should be a brief summary of what your library does and its key features.
 - Whether the library is a ReactJS library. If it is, additional dependencies and configurations for React will be set up.
 
-You can initialize your library using either npm or yarn as shown:
+You can initialize your library using your preferred package manager as shown:
 
 **Using npm:**
 
@@ -61,6 +62,13 @@ npm install
 ```bash
 yarn run init
 yarn install
+```
+
+**Using pnpm:**
+
+```bash
+pnpm run init
+pnpm install
 ```
 
 After running these commands, your library will be set up and ready for development. You can start adding your code in the `src` directory.

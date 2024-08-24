@@ -47,6 +47,13 @@ inquirer
       message: "Is this a ReactJS library?",
       default: false,
     },
+    {
+      type: "confirm",
+      name: "include-tailwind",
+      message: "Include Tailwind CSS configuration?",
+      when: (answers) => answers["is-react-library"],
+      default: false,
+    },
   ])
   .then((answers) => {
     //* Update package.json
@@ -72,6 +79,12 @@ inquirer
         packageJson.devDependencies["eslint-plugin-react-hooks"] = "^4.6.0";
         packageJson.devDependencies.react = "^18.2.0";
         packageJson.devDependencies["react-dom"] = "^18.2.0";
+
+        if (answers["include-tailwind"]) {
+          packageJson.devDependencies["tailwindcss"] = "^3.4.10";
+          packageJson.devDependencies["postcss"] = "^8.4.41";
+          packageJson.devDependencies["autoprefixer"] = "^10.4.20";
+        }
       }
 
       fs.writeFile(
@@ -79,9 +92,54 @@ inquirer
         JSON.stringify(packageJson, null, 2),
         (err) => {
           if (err) throw err;
+          console.log("package.json updated successfully.");
         }
       );
     });
+
+    //* Configure Tailwind CSS if selected
+    if (answers["is-react-library"] && answers["include-tailwind"]) {
+      const tailwindConfigPath = "./tailwind.config.js";
+      const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}`;
+
+      fs.writeFile(tailwindConfigPath, tailwindConfig, "utf8", (err) => {
+        if (err) throw err;
+        console.log("Tailwind CSS configuration created successfully.");
+      });
+
+      const postcssConfigPath = "./postcss.config.js";
+      const postcssConfig = `module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`;
+
+      fs.writeFile(postcssConfigPath, postcssConfig, "utf8", (err) => {
+        if (err) throw err;
+        console.log("PostCSS configuration created successfully.");
+      });
+
+      // Create a CSS file to import Tailwind
+      const cssFilePath = "./src/styles.css";
+      const cssContent = `@tailwind base;
+@tailwind components;
+@tailwind utilities;`;
+
+      fs.writeFile(cssFilePath, cssContent, "utf8", (err) => {
+        if (err) throw err;
+        console.log("Tailwind CSS import file created successfully.");
+      });
+    }
 
     //* Update Code of Conduct
     const cocPath = "./CODE_OF_CONDUCT.md";
@@ -91,6 +149,7 @@ inquirer
 
       fs.writeFile(cocPath, updatedData, "utf8", (err) => {
         if (err) throw err;
+        console.log("Code of Conduct updated successfully.");
       });
     });
 
@@ -118,8 +177,12 @@ inquirer
           //* Rename README.template.md to README.md
           fs.rename(readmeTemplatePath, readmePath, (err) => {
             if (err) throw err;
+            console.log("README.md updated successfully.");
           });
         });
       });
     });
+  }).catch((error) => {
+    console.error("Error setting up library.", error);
+    process.exit(1);
   });
