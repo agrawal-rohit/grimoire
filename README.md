@@ -63,9 +63,9 @@ After running these commands, your library will be set up and ready for developm
 
 To set up continuous integration and delivery (CI/CD), you will need to configure the following action secrets in your repository settings. These environment variables are crucial for the proper functioning of the CI/CD pipeline and the successful deployment of your library:
 
-- `CODACY_PROJECT_TOKEN`: This token is used for collecting coverage metrics with Codacy.
-- `NPM_TOKEN`: This token is necessary for publishing your package to NPM.
-- `GH_TOKEN`: A GitHub personal access token with at least the following permissions:
+- `CODACY_PROJECT_TOKEN`: This token is used for collecting coverage metrics with Codacy. This token can be found in the Codacy project settings under the 'Integrations' tab.
+- `NPM_TOKEN`: This token is necessary for publishing your package to NPM. This should be a Classic token with the "Automation" permission.
+- `GH_TOKEN`: A classic GitHub personal access token with at least the following permissions:
   - `repo`: Full control of the repository. This permission allows the CI/CD pipeline to interact with your repository, including pushing code, creating releases, and more.
   - `workflow`: Update GitHub Actions workflows. This permission allows the CI/CD pipeline to modify and execute GitHub Actions workflows, which are used to automate your development process.
 
