@@ -52,9 +52,9 @@ To set up your library, you will need to run the initialization commands provide
 You can initialize your library using your preferred package manager as shown below:
 
 ```bash
-npm install --only=dev
-npm run init
-npm install
+pnpm install --dev
+pnpm run init
+pnpm install
 ```
 
 After running these commands, your library will be set up and ready for development. You can start adding your code in the `src` directory.
@@ -79,16 +79,8 @@ For making commits, I recommend following the conventional commits format since 
 
 To make a commit, stage your changes and run the following command:
 
-**Using npm:**
-
 ```bash
-npm run cz
-```
-
-**Using yarn:**
-
-```bash
-yarn cz
+pnpm run cz
 ```
 
 This command will start an interactive prompt to generate the commit message. Follow the prompts and provide the necessary information. This will ensure that your commit message follows the conventional commits format.
