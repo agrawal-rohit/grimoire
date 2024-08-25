@@ -47,28 +47,14 @@ To set up your library, you will need to run the initialization commands provide
 - The library's name as it will appear on NPM. This name should be unique and descriptive, helping users to find your library easily.
 - A description for the library. This should be a brief summary of what your library does and its key features.
 - Whether the library is a ReactJS library. If it is, additional dependencies and configurations for React will be set up.
+- If it's a ReactJS library, whether you want to set up Tailwind CSS configuration. This will add Tailwind CSS support to your React library.
 
-You can initialize your library using your preferred package manager as shown:
-
-**Using npm:**
+You can initialize your library as shown below (You need to have `inquirer` installed globally before running the initialization commands):
 
 ```bash
+npm install -g inquirer
 npm run init
-npm install
-```
-
-**Using yarn:**
-
-```bash
-yarn run init
-yarn install
-```
-
-**Using pnpm:**
-
-```bash
-pnpm run init
-pnpm install
+npm install # (Use your preferred package manager)
 ```
 
 After running these commands, your library will be set up and ready for development. You can start adding your code in the `src` directory.
