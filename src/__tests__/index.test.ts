@@ -1,4 +1,3 @@
-import { expect } from "@jest/globals";
 import data from "../index";
 
 describe("Template Test", () => {
