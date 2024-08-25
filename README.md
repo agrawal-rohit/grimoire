@@ -49,12 +49,12 @@ To set up your library, you will need to run the initialization commands provide
 - Whether the library is a ReactJS library. If it is, additional dependencies and configurations for React will be set up.
 - If it's a ReactJS library, whether you want to set up Tailwind CSS configuration. This will add Tailwind CSS support to your React library.
 
-You can initialize your library as shown below (You need to have `inquirer` installed globally before running the initialization commands):
+You can initialize your library using your preferred package manager as shown below:
 
 ```bash
-npm install -g inquirer
+npm install --only=dev
 npm run init
-npm install # (Use your preferred package manager)
+npm install
 ```
 
 After running these commands, your library will be set up and ready for development. You can start adding your code in the `src` directory.

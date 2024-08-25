@@ -1,5 +1,5 @@
 const fs = require("fs");
-const inquirer = require("inquirer");
+const { input, confirm } = require("@inquirer/prompts");
 const execSync = require("child_process").execSync;
 
 const getGitUsername = () => {
@@ -29,78 +29,76 @@ const getGitEmail = () => {
 const gitUsername = getGitUsername();
 const gitEmail = getGitEmail();
 
-inquirer
-  .prompt([
-    {
-      type: "input",
-      name: "library-name",
-      message: "Library name (as seen on NPM):",
-    },
-    {
-      type: "input",
-      name: "library-description",
-      message: "Library description:",
-    },
-    {
-      type: "confirm",
-      name: "is-react-library",
-      message: "Is this a ReactJS library?",
-      default: false,
-    },
-    {
-      type: "confirm",
-      name: "include-tailwind",
+const main = async () => {
+  const libraryName = await input({
+    message: "Library name (as seen on NPM):",
+  });
+  const libraryDescription = await input({ message: "Library description:" });
+  const isReactLibrary = await confirm({
+    message: "Is this a ReactJS library?",
+    default: false,
+  });
+
+  let includeTailwind = false;
+  if (isReactLibrary) {
+    includeTailwind = await confirm({
       message: "Include Tailwind CSS configuration?",
-      when: (answers) => answers["is-react-library"],
       default: false,
-    },
-  ])
-  .then((answers) => {
-    //* Update package.json
-    const packageJsonPath = "./package.json";
-    fs.readFile(packageJsonPath, (err, data) => {
-      if (err) throw err;
-      const packageJson = JSON.parse(data);
-      packageJson.name = answers["library-name"];
-      packageJson.description = answers["library-description"];
-      packageJson.author = `${gitUsername} <${gitEmail}>`;
-
-      if (answers["is-react-library"]) {
-        packageJson.peerDependencies = {
-          react: ">=18",
-          "react-dom": ">=18",
-        };
-
-        packageJson.devDependencies["@testing-library/jest-dom"] = "^6.2.0";
-        packageJson.devDependencies["@testing-library/react"] = "^14.1.2";
-        packageJson.devDependencies["@types/react"] = "^18.2.48";
-        packageJson.devDependencies["@types/react-dom"] = "^18.2.18";
-        packageJson.devDependencies["eslint-plugin-react"] = "^7.33.2";
-        packageJson.devDependencies["eslint-plugin-react-hooks"] = "^4.6.0";
-        packageJson.devDependencies.react = "^18.2.0";
-        packageJson.devDependencies["react-dom"] = "^18.2.0";
-
-        if (answers["include-tailwind"]) {
-          packageJson.devDependencies["tailwindcss"] = "^3.4.10";
-          packageJson.devDependencies["postcss"] = "^8.4.41";
-          packageJson.devDependencies["autoprefixer"] = "^10.4.20";
-        }
-      }
-
-      fs.writeFile(
-        packageJsonPath,
-        JSON.stringify(packageJson, null, 2),
-        (err) => {
-          if (err) throw err;
-          console.log("package.json updated successfully.");
-        }
-      );
     });
+  }
 
-    //* Configure Tailwind CSS if selected
-    if (answers["is-react-library"] && answers["include-tailwind"]) {
-      const tailwindConfigPath = "./tailwind.config.js";
-      const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+  const answers = {
+    "library-name": libraryName,
+    "library-description": libraryDescription,
+    "is-react-library": isReactLibrary,
+    "include-tailwind": includeTailwind,
+  };
+
+  //* Update package.json
+  const packageJsonPath = "./package.json";
+  fs.readFile(packageJsonPath, (err, data) => {
+    if (err) throw err;
+    const packageJson = JSON.parse(data);
+    packageJson.name = answers["library-name"];
+    packageJson.description = answers["library-description"];
+    packageJson.author = `${gitUsername} <${gitEmail}>`;
+
+    if (answers["is-react-library"]) {
+      packageJson.peerDependencies = {
+        react: ">=18",
+        "react-dom": ">=18",
+      };
+
+      packageJson.devDependencies["@testing-library/jest-dom"] = "^6.2.0";
+      packageJson.devDependencies["@testing-library/react"] = "^14.1.2";
+      packageJson.devDependencies["@types/react"] = "^18.2.48";
+      packageJson.devDependencies["@types/react-dom"] = "^18.2.18";
+      packageJson.devDependencies["eslint-plugin-react"] = "^7.33.2";
+      packageJson.devDependencies["eslint-plugin-react-hooks"] = "^4.6.0";
+      packageJson.devDependencies.react = "^18.2.0";
+      packageJson.devDependencies["react-dom"] = "^18.2.0";
+
+      if (answers["include-tailwind"]) {
+        packageJson.devDependencies["tailwindcss"] = "^3.4.10";
+        packageJson.devDependencies["postcss"] = "^8.4.41";
+        packageJson.devDependencies["autoprefixer"] = "^10.4.20";
+      }
+    }
+
+    fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2),
+      (err) => {
+        if (err) throw err;
+        console.log("package.json updated successfully.");
+      }
+    );
+  });
+
+  //* Configure Tailwind CSS if selected
+  if (answers["is-react-library"] && answers["include-tailwind"]) {
+    const tailwindConfigPath = "./tailwind.config.js";
+    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -111,78 +109,80 @@ module.exports = {
   plugins: [],
 }`;
 
-      fs.writeFile(tailwindConfigPath, tailwindConfig, "utf8", (err) => {
-        if (err) throw err;
-        console.log("Tailwind CSS configuration created successfully.");
-      });
+    fs.writeFile(tailwindConfigPath, tailwindConfig, "utf8", (err) => {
+      if (err) throw err;
+      console.log("Tailwind CSS configuration created successfully.");
+    });
 
-      const postcssConfigPath = "./postcss.config.js";
-      const postcssConfig = `module.exports = {
+    const postcssConfigPath = "./postcss.config.js";
+    const postcssConfig = `module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 }`;
 
-      fs.writeFile(postcssConfigPath, postcssConfig, "utf8", (err) => {
-        if (err) throw err;
-        console.log("PostCSS configuration created successfully.");
-      });
+    fs.writeFile(postcssConfigPath, postcssConfig, "utf8", (err) => {
+      if (err) throw err;
+      console.log("PostCSS configuration created successfully.");
+    });
 
-      // Create a CSS file to import Tailwind
-      const cssFilePath = "./src/styles.css";
-      const cssContent = `@tailwind base;
+    // Create a CSS file to import Tailwind
+    const cssFilePath = "./src/styles.css";
+    const cssContent = `@tailwind base;
 @tailwind components;
 @tailwind utilities;`;
 
-      fs.writeFile(cssFilePath, cssContent, "utf8", (err) => {
-        if (err) throw err;
-        console.log("Tailwind CSS import file created successfully.");
-      });
-    }
-
-    //* Update Code of Conduct
-    const cocPath = "./CODE_OF_CONDUCT.md";
-    fs.readFile(cocPath, "utf8", (err, data) => {
+    fs.writeFile(cssFilePath, cssContent, "utf8", (err) => {
       if (err) throw err;
-      const updatedData = data.replaceAll("<contact-email>", gitEmail);
-
-      fs.writeFile(cocPath, updatedData, "utf8", (err) => {
-        if (err) throw err;
-        console.log("Code of Conduct updated successfully.");
-      });
+      console.log("Tailwind CSS import file created successfully.");
     });
+  }
 
-    //* Update README
-    const readmeTemplatePath = "./README.template.md";
-    fs.readFile(readmeTemplatePath, "utf8", (err, data) => {
+  //* Update Code of Conduct
+  const cocPath = "./CODE_OF_CONDUCT.md";
+  fs.readFile(cocPath, "utf8", (err, data) => {
+    if (err) throw err;
+    const updatedData = data.replaceAll("<contact-email>", gitEmail);
+
+    fs.writeFile(cocPath, updatedData, "utf8", (err) => {
       if (err) throw err;
-      let updatedData = data.replaceAll(
-        "<library-name>",
-        answers["library-name"]
-      );
-      updatedData = updatedData.replaceAll(
-        "<library-description>",
-        answers["library-description"]
-      );
+      console.log("Code of Conduct updated successfully.");
+    });
+  });
 
-      fs.writeFile(readmeTemplatePath, updatedData, "utf8", (err) => {
+  //* Update README
+  const readmeTemplatePath = "./README.template.md";
+  fs.readFile(readmeTemplatePath, "utf8", (err, data) => {
+    if (err) throw err;
+    let updatedData = data.replaceAll(
+      "<library-name>",
+      answers["library-name"]
+    );
+    updatedData = updatedData.replaceAll(
+      "<library-description>",
+      answers["library-description"]
+    );
+
+    fs.writeFile(readmeTemplatePath, updatedData, "utf8", (err) => {
+      if (err) throw err;
+
+      //* Delete current README.md
+      const readmePath = "./README.md";
+      fs.unlink(readmePath, (err) => {
         if (err) throw err;
 
-        //* Delete current README.md
-        const readmePath = "./README.md";
-        fs.unlink(readmePath, (err) => {
+        //* Rename README.template.md to README.md
+        fs.rename(readmeTemplatePath, readmePath, (err) => {
           if (err) throw err;
-
-          //* Rename README.template.md to README.md
-          fs.rename(readmeTemplatePath, readmePath, (err) => {
-            if (err) throw err;
-            console.log("README.md updated successfully.");
-          });
+          console.log("README.md updated successfully.");
         });
       });
     });
-  }).catch((error) => {
-    console.error("Error setting up library.", error);
-    process.exit(1);
   });
+};
+
+main().catch((error) => {
+  console.error("Error setting up library.", error);
+  process.exit(1);
+});

@@ -24,6 +24,7 @@
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
+    "@inquirer/prompts": "^5.3.8",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
