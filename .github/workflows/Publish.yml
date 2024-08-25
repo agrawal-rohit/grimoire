@@ -27,22 +27,22 @@ jobs:
       - name: Use cached node_modules
         uses: actions/cache@v1
         with:
-          path: node_modules
-          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            nodeModules-
+            ${{ runner.os }}-pnpm-
 
       #----------------------------------------------
       # Install Dependencies
       #----------------------------------------------
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       #----------------------------------------------
       # Run unit tests
       #----------------------------------------------
       - name: Test
-        run: yarn test:cov
+        run: pnpm run test:cov
 
       #----------------------------------------------
       # Store coverage
@@ -131,28 +131,28 @@ jobs:
   #     - name: Use cached node_modules
   #       uses: actions/cache@v1
   #       with:
-  #         path: node_modules
-  #         key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+  #         path: ~/.pnpm-store
+  #         key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
   #         restore-keys: |
-  #           nodeModules-
+  #           ${{ runner.os }}-pnpm-
 
   #     #----------------------------------------------
   #     # Install dependencies
   #     #----------------------------------------------
   #     - name: Install dependencies
-  #       run: yarn install --frozen-lockfile
+  #       run: pnpm install --frozen-lockfile
 
   #     #----------------------------------------------
   #     # Build dist package
   #     #----------------------------------------------
   #     - name: Build
-  #       run: yarn build
+  #       run: pnpm run build
 
   #     #----------------------------------------------
   #     # Publish package
   #     #----------------------------------------------
   #     - name: Semantic Release
-  #       run: yarn semantic-release
+  #       run: pnpm run semantic-release
   #       env:
   #         NPM_TOKEN: ${{secrets.NPM_TOKEN}}
   #         GITHUB_TOKEN: ${{secrets.GH_TOKEN}}
