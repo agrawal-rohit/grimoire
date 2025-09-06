@@ -1,3 +1,7 @@
+*.tgz
+.vscode
+localdev
+
 dist/
 node_modules/
 npm-debug.*

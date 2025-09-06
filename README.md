@@ -2,6 +2,22 @@
 
 This template is designed to get you setup with best practices and integrated tools for your new NPM library, so you can just focus on shipping some awesome code!
 
+# TO DO
+
+- [x] Semantic-release integration
+- [x] Add commit linting
+- [x] Add husky pre-commit hooks
+- [x] Add Github actions workflow
+- [x] Add NVM
+- [x] Add biome linting and formatting
+- [ ] Add CONTRIBUTING
+- [x] Add LICENSE
+- [ ] Update README
+- [ ] Add tests
+- [x] Add issue template
+- [x] Add PR template
+- [ ] Add Dependabot management
+
 ## Table of Contents
 
 - [Features](#features)
