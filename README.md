@@ -10,7 +10,7 @@ This template is designed to get you setup with best practices and integrated to
 - [x] Add Github actions workflow
 - [x] Add NVM
 - [x] Add biome linting and formatting
-- [ ] Add CONTRIBUTING
+- [x] Add CONTRIBUTING
 - [x] Add LICENSE
 - [ ] Update README
 - [ ] Add tests
