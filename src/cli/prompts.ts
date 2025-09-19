@@ -8,10 +8,10 @@ import { validateLibraryName } from "../utils/setup-utils";
  * @returns A JSON object with the library configuration
  */
 export async function getSetupConfiguration(): Promise<PromptAnswers> {
-  cliHelper.header("[1/3] what are we building");
+  cliHelper.header("[1/3] what are you building");
   const basicDetails = await promptLibraryDetails();
 
-  cliHelper.header("[2/3] what do we need");
+  cliHelper.header("[2/3] what do you need");
   const projectDetails = await promptProjectDetails();
 
   cliHelper.header("[3/3] wrapping it up");
