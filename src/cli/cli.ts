@@ -5,13 +5,13 @@ import {
   log,
   type SelectOptions,
   select,
+  spinner,
   type TextOptions,
   text,
 } from "@clack/prompts";
 import chalk from "chalk";
 
-class CLIHelper {
-  // Internal helpers
+class CLI {
   handleCancel(value: unknown) {
     if (
       typeof value !== "symbol" ||
@@ -23,7 +23,6 @@ class CLIHelper {
     this.end("Setup interrupted");
   }
 
-  // Logging methods
   header(title: string): void {
     log.message(" ", {
       symbol: chalk.bgCyanBright(` ${title} `),
@@ -50,7 +49,39 @@ class CLIHelper {
     process.exit(0);
   }
 
-  // Prompt methods
+  /**
+   * Run an async function while showing a spinner.
+   * Starts the spinner, runs fn, then stops the spinner with a final message.
+   * @param message Initial spinner message.
+   * @param fn Async function to execute while the spinner is active.
+   * @param doneMessage Final message to show upon success. Defaults to "Done".
+   * @returns The resolved value of fn.
+   * @throws Re-throws any error after stopping the spinner with "Failed".
+   */
+  async withSpinner<T>(
+    message: string,
+    fn: () => Promise<T>,
+    doneMessage = "Done"
+  ): Promise<T> {
+    const s = spinner();
+    s.start(message);
+    try {
+      const res = await fn();
+      s.stop(doneMessage);
+      return res;
+    } catch (err) {
+      s.stop("Failed");
+      throw err;
+    }
+  }
+
+  /**
+   * Prompt for a text input.
+   * @param message The prompt message to display.
+   * @param opts Additional options for the text prompt (excluding message).
+   * @param defaultValue The default value to use if the user provides no input.
+   * @returns The typed value entered by the user.
+   */
   async textInput<
     Value extends Exclude<Awaited<ReturnType<typeof text>>, symbol>,
   >(
@@ -69,6 +100,13 @@ class CLIHelper {
     }).then((v) => this.handleCancel(v))) as Promise<Value>;
   }
 
+  /**
+   * Prompt for a selection input.
+   * @param message The prompt message to display.
+   * @param opts Options for the select prompt (excluding message). Default includes an empty options array.
+   * @param defaultValue The default value to preselect.
+   * @returns The selected value.
+   */
   async selectInput<
     Value extends Exclude<Awaited<ReturnType<typeof select>>, symbol>,
   >(
@@ -86,6 +124,13 @@ class CLIHelper {
     }).then((v) => this.handleCancel(v))) as Promise<Value>;
   }
 
+  /**
+   * Prompt for a boolean confirmation input.
+   * @param message The prompt message to display.
+   * @param opts Options for the confirm prompt (excluding message).
+   * @param defaultValue The default value to use if no explicit input is given.
+   * @returns The confirmed value.
+   */
   async confirmInput<
     Value extends Exclude<Awaited<ReturnType<typeof confirm>>, symbol>,
   >(
@@ -102,5 +147,5 @@ class CLIHelper {
   }
 }
 
-const cliHelper = new CLIHelper();
-export default cliHelper;
+const cli = new CLI();
+export default cli;

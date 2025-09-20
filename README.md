@@ -16,7 +16,8 @@ This template is designed to get you setup with best practices and integrated to
 - [ ] Add tests
 - [x] Add issue template
 - [x] Add PR template
-- [ ] Add Dependabot management
+- [x] Add Dependabot management
+- [ ] Make the branch rulesets as a copy-able JSON
 
 ## Table of Contents
 
@@ -81,9 +82,6 @@ To set up continuous integration and delivery (CI/CD), you will need to configur
 
 - `CODACY_PROJECT_TOKEN`: This token is used for collecting coverage metrics with Codacy. This token can be found in the Codacy project settings under the 'Integrations' tab.
 - `NPM_TOKEN`: This token is necessary for publishing your package to NPM. This should be a Classic token with the "Automation" permission.
-- `GH_TOKEN`: A classic GitHub personal access token with at least the following permissions:
-  - `repo`: Full control of the repository. This permission allows the CI/CD pipeline to interact with your repository, including pushing code, creating releases, and more.
-  - `workflow`: Update GitHub Actions workflows. This permission allows the CI/CD pipeline to modify and execute GitHub Actions workflows, which are used to automate your development process.
 
 It is essential to ensure that the GitHub Actions workflow has **'Read and write permissions'** within the repository settings. This permission allows [semantic-release](https://github.com/semantic-release/semantic-release) to add tags and create GitHub releases. You can verify and change this setting by navigating to:
 

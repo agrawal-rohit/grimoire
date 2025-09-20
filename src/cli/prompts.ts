@@ -1,35 +1,34 @@
-import cliHelper from "../core/cli-helper";
-import { getGitEmail, getGitUsername } from "../core/git";
-import { PackageManager, type PromptAnswers } from "../core/types";
-import { validateLibraryName } from "../utils/setup-utils";
+import { PackageManager } from "../types/package-manager.types";
+import type { PromptAnswers } from "../types/prompts.types";
+import { getGitEmail, getGitUsername } from "../utils/git.utils";
+import { validatePackageName } from "../utils/package-manager.utils";
+import cli from "./cli";
 
 /**
  * Gather relevant configuration to proceed with the library creation
  * @returns A JSON object with the library configuration
  */
 export async function getSetupConfiguration(): Promise<PromptAnswers> {
-  cliHelper.header("[1/3] what are you building");
-  const basicDetails = await promptLibraryDetails();
+  cli.header("[1/3] what are you building");
+  const project = await promptProjectInputs();
 
-  cliHelper.header("[2/3] what do you need");
-  const projectDetails = await promptProjectDetails();
+  cli.header("[2/3] what do you need");
+  const tooling = await promptToolingInputs();
 
-  cliHelper.header("[3/3] wrapping it up");
-  const authorDetails = await promptAuthorDetails();
+  cli.header("[3/3] wrapping it up");
+  const author = await promptAuthorInputs();
 
   const answers: PromptAnswers = {
-    basicDetails,
-    projectDetails,
-    authorDetails,
+    project,
+    tooling,
+    author,
   };
 
   return answers;
 }
 
-export async function promptLibraryDetails(): Promise<
-  PromptAnswers["basicDetails"]
-> {
-  const name = await cliHelper.textInput(
+export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
+  const name = await cli.textInput(
     "What should we call your library?",
     {
       validate: (val: string) =>
@@ -39,14 +38,14 @@ export async function promptLibraryDetails(): Promise<
   );
 
   // Validate the final lib name
-  const validation = validateLibraryName(name);
+  const validation = validatePackageName(name);
   if (validation !== true) {
     throw new Error(
       typeof validation === "string" ? validation : "Invalid package name"
     );
   }
 
-  const description = await cliHelper.textInput("What would it do?", {
+  const description = await cli.textInput("What would it do?", {
     placeholder: "Short description of the library",
   });
 
@@ -56,10 +55,8 @@ export async function promptLibraryDetails(): Promise<
   };
 }
 
-export async function promptProjectDetails(): Promise<
-  PromptAnswers["projectDetails"]
-> {
-  const packageManager = await cliHelper.selectInput<PackageManager>(
+export async function promptToolingInputs(): Promise<PromptAnswers["tooling"]> {
+  const packageManager = await cli.selectInput<PackageManager>(
     "Any preferred package manager?",
     {
       options: [
@@ -72,14 +69,14 @@ export async function promptProjectDetails(): Promise<
     PackageManager.PNPM
   );
 
-  const shouldInitializeGit = await cliHelper.confirmInput(
+  const shouldInitializeGit = await cli.confirmInput(
     "Initialize a new git repository?",
     {
       initialValue: true,
     }
   );
 
-  const shouldReleaseToNPM = await cliHelper.confirmInput(
+  const shouldReleaseToNPM = await cli.confirmInput(
     "Would this be released to NPM?",
     {
       initialValue: true,
@@ -93,9 +90,7 @@ export async function promptProjectDetails(): Promise<
   };
 }
 
-export async function promptAuthorDetails(): Promise<
-  PromptAnswers["authorDetails"]
-> {
+export async function promptAuthorInputs(): Promise<PromptAnswers["author"]> {
   const gitName = getGitUsername();
   const inferredGitEmail = getGitEmail();
 
@@ -104,28 +99,28 @@ export async function promptAuthorDetails(): Promise<
     : undefined;
 
   // Author name
-  const authorName = await cliHelper.textInput(
+  const authorName = await cli.textInput(
     "What's your name?",
     undefined,
     gitName
   );
 
   // Author email
-  const gitEmail = await cliHelper.textInput(
+  const gitEmail = await cli.textInput(
     "What's your email?",
     undefined,
     inferredGitEmail
   );
 
   // GitHub username
-  const githubUsername = await cliHelper.textInput(
+  const githubUsername = await cli.textInput(
     "What's your GitHub username?",
     undefined,
     suggestedUsername
   );
 
   // NPM username
-  const npmUsername = await cliHelper.textInput(
+  const npmUsername = await cli.textInput(
     "What's your NPM username?",
     undefined,
     suggestedUsername

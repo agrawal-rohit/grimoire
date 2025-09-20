@@ -5,19 +5,14 @@
   "bin": "./bin/cli.js",
   "files": ["dist", "bin", "README.md", "LICENSE"],
   "author": "Rohit Agrawal <https://github.com/agrawal-rohit>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/agrawal-rohit/create-npm-library.git"
-  },
+  "repository": "https://github.com/agrawal-rohit/create-npm-library",
   "homepage": "https://github.com/agrawal-rohit/create-npm-library",
   "license": "MIT",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
-  "bugs": {
-    "url": "https://github.com/agrawal-rohit/create-npm-library/issues"
-  },
+  "bugs": "https://github.com/agrawal-rohit/create-npm-library/issues",
   "scripts": {
     "test": "jest",
     "build": "tsc",
@@ -26,12 +21,12 @@
     "check": "pnpm exec biome check --write",
     "test:cov": "jest --coverage --passWithNoTests",
     "prepack": "pnpm run build",
-    "semantic-release": "semantic-release",
+    "release": "semantic-release",
     "prepare": "husky"
   },
   "dependencies": {
-    "@clack/prompts": "^0.11.0",
     "chalk": "^5.6.2",
+    "@clack/prompts": "^0.11.0",
     "validate-npm-package-name": "6.0.2"
   },
   "devDependencies": {
