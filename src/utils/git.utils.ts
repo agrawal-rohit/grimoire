@@ -39,7 +39,7 @@ export function getGitEmail(): string | undefined {
 
 /**
  * Determine whether a directory already contains a git repository.
- * @param cwd Absolute path to the target directory
+ * @param cwd - Absolute path to the target directory
  * @returns true if a .git directory exists inside cwd; false otherwise
  */
 export function isGitRepo(cwd: string): boolean {
@@ -48,7 +48,7 @@ export function isGitRepo(cwd: string): boolean {
 
 /**
  * Initialize a git repository in the provided directory.
- * @param cwd Absolute path to the target directory where git should be initialized
+ * @param cwd - Absolute path to the target directory where git should be initialized
  * @throws Error when initialization fails due to underlying git issues
  */
 export function initGitRepo(cwd: string): void {

@@ -5,7 +5,7 @@ import { ensureDir, writeFile } from "./fs.utils";
 
 /**
  * Build a human-readable author string for package.json from the provided details
- * @param authorInputs Author details collected from prompts.
+ * @param authorInputs - Author details collected from prompts.
  * @returns A formatted author string or undefined if insufficient details.
  */
 export function buildAuthorField(
@@ -19,8 +19,8 @@ export function buildAuthorField(
 
 /**
  *
- * @param cwd Current working directory (e.g., process.cwd()).
- * @param answers Aggregated answers, used for the library name (directory).
+ * @param cwd - Current working directory (e.g., process.cwd()).
+ * @param answers - Aggregated answers, used for the library name (directory).
  * @returns Object with the absolute targetDir and a boolean indicating if it's empty.
  */
 export function createProjectDirectory(
@@ -44,9 +44,9 @@ export function createProjectDirectory(
 
 /**
  * Create the package.json using the provided answers and package manager version.
- * @param targetDir Absolute path to the project directory.
- * @param answers Aggregated prompt answers describing the new project.
- * @param packageManagerVersion A string like "pnpm@9.0.0" to record in package.json's packageManager.
+ * @param targetDir - Absolute path to the project directory.
+ * @param answers - Aggregated prompt answers describing the new project.
+ * @param packageManagerVersion - A string like "pnpm@9.0.0" to record in package.json's packageManager.
  * @returns The final package.json object that was persisted to disk.
  * @throws If an existing package.json is invalid JSON.
  */

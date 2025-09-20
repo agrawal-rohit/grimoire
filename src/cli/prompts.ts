@@ -9,14 +9,17 @@ import cli from "./cli";
  * @returns A JSON object with the library configuration
  */
 export async function getSetupConfiguration(): Promise<PromptAnswers> {
-  cli.header("[1/3] what are you building");
+  cli.header("let's start with the basics");
   const project = await promptProjectInputs();
 
-  cli.header("[2/3] what do you need");
+  cli.header("let's pick what we need");
   const tooling = await promptToolingInputs();
 
-  cli.header("[3/3] wrapping it up");
-  const author = await promptAuthorInputs();
+  let author: PromptAnswers["author"] = {};
+  if (tooling.shouldInitializeGit || tooling.shouldReleaseToNPM) {
+    cli.header("let's get to know you");
+    author = await promptAuthorInputs(tooling);
+  }
 
   const answers: PromptAnswers = {
     project,
@@ -27,6 +30,11 @@ export async function getSetupConfiguration(): Promise<PromptAnswers> {
   return answers;
 }
 
+/**
+ * Prompts the user for basic project information including name and description.
+ * Validates the package name and throws an error if invalid.
+ * @returns The project configuration object with name and description.
+ */
 export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
   const name = await cli.textInput(
     "What should we call your library?",
@@ -55,6 +63,10 @@ export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
   };
 }
 
+/**
+ * Prompts the user for tooling preferences such as package manager, git initialization, and NPM release.
+ * @returns The tooling configuration object.
+ */
 export async function promptToolingInputs(): Promise<PromptAnswers["tooling"]> {
   const packageManager = await cli.selectInput<PackageManager>(
     "Any preferred package manager?",
@@ -90,7 +102,15 @@ export async function promptToolingInputs(): Promise<PromptAnswers["tooling"]> {
   };
 }
 
-export async function promptAuthorInputs(): Promise<PromptAnswers["author"]> {
+/**
+ * Prompts the user for author information, inferring from git config where possible.
+ * Only prompts for GitHub and NPM usernames if relevant based on tooling.
+ * @param tooling - The tooling configuration to determine which fields to prompt for.
+ * @returns The author configuration object.
+ */
+export async function promptAuthorInputs(
+  tooling: PromptAnswers["tooling"]
+): Promise<PromptAnswers["author"]> {
   const gitName = getGitUsername();
   const inferredGitEmail = getGitEmail();
 
@@ -113,18 +133,24 @@ export async function promptAuthorInputs(): Promise<PromptAnswers["author"]> {
   );
 
   // GitHub username
-  const githubUsername = await cli.textInput(
-    "What's your GitHub username?",
-    undefined,
-    suggestedUsername
-  );
+  let githubUsername: string | undefined;
+  if (tooling.shouldInitializeGit) {
+    githubUsername = await cli.textInput(
+      "What's your GitHub username?",
+      undefined,
+      suggestedUsername
+    );
+  }
 
   // NPM username
-  const npmUsername = await cli.textInput(
-    "What's your NPM username?",
-    undefined,
-    suggestedUsername
-  );
+  let npmUsername: string | undefined;
+  if (tooling.shouldReleaseToNPM) {
+    npmUsername = await cli.textInput(
+      "What's your NPM username?",
+      undefined,
+      suggestedUsername
+    );
+  }
 
   return {
     name: authorName,

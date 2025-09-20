@@ -3,13 +3,15 @@ import {
   confirm,
   intro,
   log,
+  outro,
   type SelectOptions,
   select,
-  spinner,
   type TextOptions,
   text,
 } from "@clack/prompts";
 import chalk from "chalk";
+import type { ListrTaskWrapper } from "listr2";
+import { type DefaultRenderer, Listr, type SimpleRenderer } from "listr2";
 
 class CLI {
   handleCancel(value: unknown) {
@@ -34,6 +36,10 @@ class CLI {
     intro(`${chalk.bgGreen(" @agrawalrohit/create-lib ")} ${message}`);
   }
 
+  outro(message: string): void {
+    outro(`${chalk.bgGreen(" setup complete ")} ${message}`);
+  }
+
   warn(message: string): void {
     console.warn(`${chalk.bgYellow(" warn ")} ${message}`);
   }
@@ -50,36 +56,61 @@ class CLI {
   }
 
   /**
-   * Run an async function while showing a spinner.
-   * Starts the spinner, runs fn, then stops the spinner with a final message.
-   * @param message Initial spinner message.
-   * @param fn Async function to execute while the spinner is active.
-   * @param doneMessage Final message to show upon success. Defaults to "Done".
-   * @returns The resolved value of fn.
-   * @throws Re-throws any error after stopping the spinner with "Failed".
+   * Run multiple subtasks under a grouped goal using listr2 for a coherent task list.
+   * Each subtask gets a chalk-styled title and runs sequentially.
+   * @param goalTitle - Overall goal title (e.g., "Preparing project", styled bold cyan).
+   * @param subtasks - Array of subtasks, each with a title and async task function.
+   * @returns Promise that resolves when all subtasks complete.
+   * @throws Re-throws errors from subtasks, updating their titles to "Failed" (red).
    */
-  async withSpinner<T>(
-    message: string,
-    fn: () => Promise<T>,
-    doneMessage = "Done"
-  ): Promise<T> {
-    const s = spinner();
-    s.start(message);
-    try {
-      const res = await fn();
-      s.stop(doneMessage);
-      return res;
-    } catch (err) {
-      s.stop("Failed");
-      throw err;
-    }
+  async withTasks(
+    goalTitle: string,
+    subtasks: Array<{
+      title: string;
+      task: () => Promise<void>;
+    }>
+  ): Promise<void> {
+    const tasks = new Listr(
+      [
+        {
+          title: chalk.cyan(goalTitle),
+          task: async (
+            _ctx: unknown,
+            task: ListrTaskWrapper<
+              unknown,
+              typeof DefaultRenderer,
+              typeof SimpleRenderer
+            >
+          ) => {
+            const subTasks = subtasks.map(({ title, task: run }) => ({
+              title: chalk.grey(title),
+              task: async () => {
+                await run();
+              },
+            }));
+            return task.newListr(subTasks, {
+              rendererOptions: {
+                collapseErrors: false,
+              },
+            });
+          },
+        },
+      ],
+      {
+        rendererOptions: {
+          collapseErrors: false,
+        },
+      }
+    );
+
+    await tasks.run();
   }
 
   /**
    * Prompt for a text input.
-   * @param message The prompt message to display.
-   * @param opts Additional options for the text prompt (excluding message).
-   * @param defaultValue The default value to use if the user provides no input.
+   * @param message - The prompt message to display.
+   * @param opts - Additional options for the text prompt (excluding message).
+   * @param defaultValue - The default value to use if the user provides no input.
    * @returns The typed value entered by the user.
    */
   async textInput<
@@ -102,9 +133,9 @@ class CLI {
 
   /**
    * Prompt for a selection input.
-   * @param message The prompt message to display.
-   * @param opts Options for the select prompt (excluding message). Default includes an empty options array.
-   * @param defaultValue The default value to preselect.
+   * @param message - The prompt message to display.
+   * @param opts - Options for the select prompt (excluding message). Default includes an empty options array.
+   * @param defaultValue - The default value to preselect.
    * @returns The selected value.
    */
   async selectInput<
@@ -126,9 +157,9 @@ class CLI {
 
   /**
    * Prompt for a boolean confirmation input.
-   * @param message The prompt message to display.
-   * @param opts Options for the confirm prompt (excluding message).
-   * @param defaultValue The default value to use if no explicit input is given.
+   * @param message - The prompt message to display.
+   * @param opts - Options for the confirm prompt (excluding message).
+   * @param defaultValue - The default value to use if no explicit input is given.
    * @returns The confirmed value.
    */
   async confirmInput<

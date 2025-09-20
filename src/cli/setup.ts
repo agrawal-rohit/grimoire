@@ -5,49 +5,80 @@ import { createProjectDirectory, writePackageJson } from "../utils/setup.utils";
 import cli from "./cli";
 import { getSetupConfiguration } from "./prompts";
 
+/**
+ * Helper to create conditional tasks for cleaner task array building.
+ * @param condition - Whether to include the task
+ * @param title - Task title
+ * @param task - Task function
+ * @returns Array with task if condition is true, empty array otherwise
+ */
+function conditionalTask(
+  condition: boolean,
+  title: string,
+  task: () => Promise<void>
+): Array<{ title: string; task: () => Promise<void> }> {
+  return condition ? [{ title, task }] : [];
+}
+
 async function runSetup(): Promise<void> {
-  cli.intro("Let's get started...");
+  cli.intro("");
 
   // 1) Gather setup answers
   const answers = await getSetupConfiguration();
 
-  // 2) Preparing project
-  const { targetDir, isEmpty } = await cli.withSpinner(
-    "Preparing project",
-    async () => {
-      const result = createProjectDirectory(
-        process.cwd(),
-        answers.project.name
-      );
+  cli.outro("");
 
-      if (answers.tooling.shouldInitializeGit) initGitRepo(result.targetDir);
+  // 2) Preparing project (live task list)
+  let targetDir: string = "";
+  let isEmpty: boolean = true;
 
-      return result;
+  await cli.withTasks("Preparing project", [
+    {
+      title: "Ensure directory",
+      task: async () => {
+        const result = createProjectDirectory(
+          process.cwd(),
+          answers.project.name
+        );
+        targetDir = result.targetDir;
+        isEmpty = result.isEmpty;
+      },
     },
-    "Project prepared"
-  );
+    ...conditionalTask(
+      answers.tooling.shouldInitializeGit,
+      "Initialize git",
+      async () => {
+        initGitRepo(targetDir);
+      }
+    ),
+  ]);
+
   if (!isEmpty) {
     throw new Error(`Target directory is not empty: ${targetDir}`);
   }
 
-  // 3) Installing tooling (package manager)
-  let packageManagerVersion = ensurePackageManager(PackageManager.PNPM);
-  await cli.withSpinner(
-    "Installing tooling",
-    async () => {
-      packageManagerVersion = ensurePackageManager(
-        answers.tooling.packageManager
-      );
+  // 3) Installing tooling (live task list)
+  let packageManagerVersion: string = "";
+  await cli.withTasks("Installing tooling", [
+    {
+      title: "Ensure package manager",
+      task: async () => {
+        packageManagerVersion = ensurePackageManager(
+          answers.tooling.packageManager ?? PackageManager.PNPM
+        );
+      },
     },
-    "Tooling ready"
-  );
+  ]);
 
-  // 4) Writing project metadata (package.json)
-  await cli.withSpinner(
-    "Writing project metadata",
-    async () => writePackageJson(targetDir, answers, packageManagerVersion),
-    "Project metadata written"
-  );
+  // 4) Writing project metadata (live task list)
+  await cli.withTasks("Writing project metadata", [
+    {
+      title: "Create package.json",
+      task: async () => {
+        writePackageJson(targetDir, answers, packageManagerVersion);
+      },
+    },
+  ]);
 }
 
 // Only run when invoked directly
