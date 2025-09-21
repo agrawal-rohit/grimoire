@@ -1,7 +1,11 @@
-import { PackageManager } from "../types/package-manager.types";
 import type { PromptAnswers } from "../types/prompts.types";
+import {
+	PackageManager,
+	Styling,
+	TargetFramework,
+} from "../types/prompts.types";
+import { validatePackageName } from "../utils/common.utils";
 import { getGitEmail, getGitUsername } from "../utils/git.utils";
-import { validatePackageName } from "../utils/package-manager.utils";
 import cli from "./cli";
 
 /**
@@ -67,10 +71,15 @@ export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
 		PackageManager.PNPM,
 	);
 
-	const isReactLibrary = await cli.confirmInput(
-		"Is this a React library?",
-		undefined,
-		false,
+	const framework = await cli.selectInput<TargetFramework>(
+		"Are you building for a particular framework?",
+		{
+			options: [
+				{ label: "None", value: TargetFramework.NONE, hint: "Node" },
+				{ label: "React", value: TargetFramework.REACT },
+			],
+		},
+		TargetFramework.NONE,
 	);
 
 	const shouldReleaseToNPM = await cli.confirmInput(
@@ -84,7 +93,7 @@ export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
 		description,
 		packageManager,
 		shouldReleaseToNPM,
-		isReactLibrary,
+		framework,
 	};
 }
 
@@ -95,13 +104,18 @@ export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
 export async function promptToolingInputs(
 	project: PromptAnswers["project"],
 ): Promise<PromptAnswers["tooling"]> {
-	// TailwindCSS (only relevant for React libs)
-	let tailwindCSS = false;
-	if (project.isReactLibrary) {
-		tailwindCSS = await cli.confirmInput(
-			"Do you need TailwindCSS for styling?",
-			undefined,
-			true,
+	// Styling framework (only relevant for non-node libraries)
+	let styling: Styling = Styling.NONE;
+	if (project.framework !== TargetFramework.NONE) {
+		styling = await cli.selectInput<Styling>(
+			"Do you have any preferred styling solution?",
+			{
+				options: [
+					{ label: "None", value: Styling.NONE, hint: "Vanilla CSS" },
+					{ label: "Tailwind CSS", value: Styling.TAILWINDCSS },
+				],
+			},
+			Styling.TAILWINDCSS,
 		);
 	}
 	const precommitHooks = await cli.confirmInput(
@@ -122,13 +136,13 @@ export async function promptToolingInputs(
 			options: [
 				{
 					value: "workflows",
-					label: `CI/CD workflows`,
+					label: `Github Actions workflows`,
 					hint: "for build and release automation",
 				},
 				{
-					value: "issue-templates",
-					label: "Issue templates",
-					hint: "for bug reports/features",
+					value: "templates",
+					label: "Github templates",
+					hint: "for issues and pull requests",
 				},
 				{
 					value: "dependabot",
@@ -138,7 +152,7 @@ export async function promptToolingInputs(
 			],
 			required: false,
 		},
-		["workflows", "issue-templates", "dependabot"],
+		["workflows", "templates", "dependabot"],
 	);
 
 	// Community health files (only when releasing to NPM)
@@ -182,28 +196,19 @@ export async function promptToolingInputs(
 		};
 	}
 
-	const installDependencies = await cli.confirmInput(
-		"Do you want to install the dependencies immediately?",
-		undefined,
-		true,
-	);
-
 	const githubWorkflows = githubChoices.includes("workflows");
-	const githubIssueTemplates = githubChoices.includes("issue-templates");
+	const githubTemplates = githubChoices.includes("templates");
 	const githubDependabot = githubChoices.includes("dependabot");
 
 	return {
-		// git is initialized by default during setup; keep this true to reflect behavior
-		initGit: true,
 		precommitHooks,
-		installDependencies,
 		github: {
 			workflows: githubWorkflows,
-			issueTemplates: githubIssueTemplates,
+			templates: githubTemplates,
 			dependabot: githubDependabot,
 		},
 		codacy: codacyEnabled,
-		tailwindCSS,
+		styling,
 		community,
 	};
 }

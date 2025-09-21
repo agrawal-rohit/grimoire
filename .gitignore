@@ -1,7 +1,7 @@
 *.tgz
 .vscode
-localdev
 
+# Build & Dependencies
 dist/
 node_modules/
 npm-debug.*

@@ -1,7 +1,7 @@
 {
 	"version": "0.1.1",
 	"name": "@agrawalrohit/create-lib",
-	"description": "An opinionated CLI for scaffolding new JS/TS libraries with sensible configuration defaults and optional tooling integrations",
+	"description": "An opinionated CLI for creating new JS/TS libraries with sensible configuration defaults and optional tooling integrations",
 	"bin": "./bin/cli.js",
 	"files": [
 		"dist",
@@ -14,9 +14,6 @@
 	"homepage": "https://github.com/agrawal-rohit/create-npm-library",
 	"license": "MIT",
 	"private": false,
-	"publishConfig": {
-		"access": "public"
-	},
 	"bugs": "https://github.com/agrawal-rohit/create-npm-library/issues",
 	"scripts": {
 		"test": "jest",
@@ -27,6 +24,7 @@
 		"test:cov": "jest --coverage --passWithNoTests",
 		"prepack": "pnpm run build",
 		"release": "semantic-release",
+		"postbuild": "tsx scripts/prepare-common-templates.ts",
 		"prepare": "husky"
 	},
 	"dependencies": {
@@ -47,7 +45,8 @@
 		"lint-staged": "^16.1.6",
 		"semantic-release": "^24.2.7",
 		"ts-jest": "^29.4.1",
-		"typescript": "^5.9.2"
+		"typescript": "^5.9.2",
+		"tsx": "^4.19.0"
 	},
 	"packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67"
 }

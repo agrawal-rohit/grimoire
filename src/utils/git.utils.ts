@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { toSlug } from "./common.utils";
 import { run } from "./shell.utils";
 
 /**
@@ -58,17 +59,17 @@ export function initGitRepo(cwd: string): void {
 
 	try {
 		// Initialize repository
-		run("git init", { cwd, stdio: "inherit" });
+		run("git init", { cwd, stdio: "ignore" });
 
 		// Try to set the default branch to the desired name.
 		// On newer git versions, `git branch -M` works, older ones may require `symbolic-ref`.
 		try {
-			run(`git branch -M ${defaultBranch}`, { cwd, stdio: "inherit" });
+			run(`git branch -M ${defaultBranch}`, { cwd, stdio: "ignore" });
 		} catch {
 			try {
 				run(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
 					cwd,
-					stdio: "inherit",
+					stdio: "ignore",
 				});
 			} catch {
 				// If both attempts fail, continue without failing the setup.
@@ -78,4 +79,20 @@ export function initGitRepo(cwd: string): void {
 		const msg = e instanceof Error ? e.message : String(e);
 		throw new Error(`Failed to initialize git repository in ${cwd}: ${msg}`);
 	}
+}
+
+/**
+ * Estimate a GitHub repository URL from a possible owner (name or username) and project name.
+ * @param owner - GitHub username or author's name (will be slugified). If undefined, returns undefined.
+ * @param projectName - The target project/package name (will be slugified).
+ * @returns A URL like "https://github.com/<owner>/<repo>" or undefined if owner is missing.
+ */
+export function estimateGithubRepoUrl(
+	owner: string | undefined,
+	projectName: string,
+): string | undefined {
+	if (!owner) return undefined;
+	const ownerSlug = toSlug(owner);
+	const repoSlug = toSlug(projectName);
+	return `https://github.com/${ownerSlug}/${repoSlug}`;
 }

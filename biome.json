@@ -1,13 +1,21 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
+	"root": true,
+	"files": {
+		"includes": [
+			"src/**",
+			"bin/**",
+			"*.{js,ts,jsx,tsx,json,cjs,mjs,yaml,css}",
+			"!src/templates"
+		]
+	},
 	"formatter": {
 		"enabled": true,
-		"includes": ["src/**", "bin/**", "*.{js,ts,jsx,tsx,json,cjs,mjs,yaml,css}"]
+		"useEditorconfig": true
 	},
 	"linter": {
 		"enabled": true,
-		"rules": { "recommended": true },
-		"includes": ["src/**", "bin/**", "*.{js,ts,jsx,tsx,json,cjs,mjs,yaml,css}"]
+		"rules": { "recommended": true }
 	},
 	"assist": {
 		"enabled": true,

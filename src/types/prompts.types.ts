@@ -1,5 +1,3 @@
-import type { PackageManager } from "./package-manager.types";
-
 /** Describes the aggregated answers collected from prompts. */
 export type PromptAnswers = {
 	/** Basic project details provided by the user. */
@@ -12,27 +10,20 @@ export type PromptAnswers = {
 		packageManager: PackageManager;
 		/** Indicates whether the package should be published to npm. */
 		shouldReleaseToNPM: boolean;
-		/** Indicates if this is a ReactJS library. */
-		isReactLibrary: boolean;
+		/** Target application framework. */
+		framework: TargetFramework;
 	};
 	/** Details about project integration preferences. */
-	/** Details about project integration preferences. */
 	tooling: {
-		/** Initialize a git repository */
-		initGit: boolean;
-
 		/** Enable pre-commit hooks to enforce Conventional Commits (husky + commitlint) */
 		precommitHooks: boolean;
 
-		/** Install dependencies after scaffolding completes */
-		installDependencies: boolean;
-
-		/** GitHub related scaffold (.github) */
+		/** GitHub repository configuration (.github) */
 		github: {
 			/** Add CI/CD workflows (build, test, release) modeled after this template */
 			workflows: boolean;
-			/** Add issue templates */
-			issueTemplates: boolean;
+			/** Add issue and PR templates */
+			templates: boolean;
 			/** Add Dependabot configuration */
 			dependabot: boolean;
 		};
@@ -40,8 +31,8 @@ export type PromptAnswers = {
 		/** Code quality and coverage reporting via Codacy */
 		codacy: boolean;
 
-		/** TailwindCSS integration for React libraries */
-		tailwindCSS: boolean;
+		/** Styling solution for UI components (only relevant for React libraries). */
+		styling: Styling;
 
 		/** Community health files auto-generation */
 		community: {
@@ -51,7 +42,7 @@ export type PromptAnswers = {
 			readme: boolean;
 		};
 	};
-	/** Optional author identification details used for scaffolding. */
+	/** Optional author identification details */
 	author: {
 		/** Optional full name of the author. */
 		name?: string;
@@ -63,3 +54,21 @@ export type PromptAnswers = {
 		npmUsername?: string;
 	};
 };
+
+/**  */
+export enum PackageManager {
+	NPM = "npm",
+	YARN = "yarn",
+	PNPM = "pnpm",
+	BUN = "bun",
+}
+
+export enum TargetFramework {
+	NONE = "none",
+	REACT = "react",
+}
+
+export enum Styling {
+	NONE = "none",
+	TAILWINDCSS = "tailwindcss",
+}

@@ -1,7 +1,23 @@
-import { PackageManager } from "../types/package-manager.types";
+import fs from "node:fs";
+import {
+	PackageManager,
+	Styling,
+	TargetFramework,
+} from "../types/prompts.types";
 import { initGitRepo } from "../utils/git.utils";
-import { ensurePackageManager } from "../utils/package-manager.utils";
-import { createProjectDirectory, writePackageJson } from "../utils/setup.utils";
+import {
+	ensurePackageManager,
+	installAllDependencies,
+} from "../utils/pkg-manager.utils";
+import {
+	configurePrecommit,
+	configureStyling,
+	configureTargetFramework,
+	createProjectDirectory,
+	writeCommonConfig,
+	writePackageJson,
+	writeStarterTemplate,
+} from "../utils/setup.utils";
 import cli from "./cli";
 import { getSetupConfiguration } from "./prompts";
 
@@ -23,42 +39,40 @@ function conditionalTask(
 async function runSetup(): Promise<void> {
 	cli.intro("");
 
-	// 1) Gather setup answers
+	// Gather setup answers
 	const answers = await getSetupConfiguration();
 
-	cli.outro("");
-
-	// 2) Preparing project
+	// Check if project folder can be created
 	let targetDir: string = "";
 	let isEmpty: boolean = true;
-
-	await cli.withTasks("Preparing project", [
-		{
-			title: "Ensure directory",
-			task: async () => {
-				const result = createProjectDirectory(
-					process.cwd(),
-					answers.project.name,
-				);
-				targetDir = result.targetDir;
-				isEmpty = result.isEmpty;
-			},
-		},
-		{
-			title: "Initialize git",
-			task: async () => {
-				initGitRepo(targetDir);
-			},
-		},
-	]);
+	try {
+		const files = fs.readdirSync(targetDir);
+		isEmpty = files.length === 0;
+	} catch {
+		isEmpty = true;
+	}
 
 	if (!isEmpty) {
 		throw new Error(`Target directory is not empty: ${targetDir}`);
 	}
 
-	// 3) Installing tooling
+	cli.outro("Starting setup...");
+
+	// Prepare project
 	let packageManagerVersion: string = "";
-	await cli.withTasks("Installing tooling", [
+	await cli.withTasks("Preparing project", [
+		{
+			title: "Create project directory",
+			task: async () => {
+				targetDir = createProjectDirectory(process.cwd(), answers.project.name);
+			},
+		},
+		{
+			title: "Initialize git repository",
+			task: async () => {
+				initGitRepo(targetDir);
+			},
+		},
 		{
 			title: "Ensure package manager",
 			task: async () => {
@@ -67,14 +81,52 @@ async function runSetup(): Promise<void> {
 				);
 			},
 		},
-	]);
-
-	// 4) Writing project metadata
-	await cli.withTasks("Writing project metadata", [
 		{
 			title: "Create package.json",
 			task: async () => {
 				writePackageJson(targetDir, answers, packageManagerVersion);
+			},
+		},
+		{
+			title: "Add common configuration",
+			task: async () => {
+				await writeCommonConfig(targetDir, answers);
+			},
+		},
+		{
+			title: "Add starter files and tests",
+			task: async () => {
+				await writeStarterTemplate(targetDir);
+			},
+		},
+		...conditionalTask(
+			answers.tooling.precommitHooks,
+			"Integrating pre-commit hooks",
+			async () => {
+				await configurePrecommit(targetDir, answers);
+			},
+		),
+		...conditionalTask(
+			answers.project.framework !== TargetFramework.NONE,
+			`Add ${answers.project.framework} integration`,
+			async () => {
+				await configureTargetFramework(targetDir, answers);
+			},
+		),
+		...conditionalTask(
+			answers.tooling.styling !== Styling.NONE,
+			`Add ${answers.tooling.styling} integration`,
+			async () => {
+				await configureStyling(targetDir, answers);
+			},
+		),
+		{
+			title: "Install all dependencies",
+			task: async () => {
+				await installAllDependencies(
+					targetDir,
+					answers.project.packageManager ?? PackageManager.PNPM,
+				);
 			},
 		},
 	]);

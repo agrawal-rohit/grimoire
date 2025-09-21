@@ -29,30 +29,32 @@ class CLI {
 
 	header(title: string): void {
 		log.message(" ", {
-			symbol: chalk.bgCyanBright(` ${title} `),
+			symbol: chalk.bgCyanBright.blackBright(` ${title} `),
 		});
 	}
 
 	intro(message: string): void {
 		console.log();
-		intro(`${chalk.bgGreen(" @agrawalrohit/create-lib ")} ${message}`);
+		intro(
+			`${chalk.bgGreenBright.blackBright(" @agrawalrohit/create-lib ")} ${message}`,
+		);
 	}
 
 	outro(message: string): void {
-		outro(`${chalk.bgGreen(" setup complete ")} ${message}`);
+		outro(`${chalk.bgGreenBright.blackBright(" done ")} ${message}`);
 	}
 
 	warn(message: string): void {
-		console.warn(`${chalk.bgYellow(" warn ")} ${message}`);
+		console.warn(`${chalk.bgYellowBright.blackBright(" warn ")} ${message}`);
 	}
 
 	error(message: string): void {
-		console.error(`${chalk.bgRed(" error ")} ${message}`);
+		console.error(`${chalk.bgRedBright.blackBright(" error ")} ${message}`);
 		process.exit(1);
 	}
 
 	end(message: string): void {
-		console.error(`${chalk.bgRed(" end ")} ${message}`);
+		console.error(`${chalk.bgRedBright.blackBright(" end ")} ${message}`);
 		console.log();
 		process.exit(0);
 	}
