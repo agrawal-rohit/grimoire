@@ -1,6 +1,5 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
-	"root": true,
 	"files": {
 		"includes": [
 			"src/**",
@@ -10,8 +9,7 @@
 		]
 	},
 	"formatter": {
-		"enabled": true,
-		"useEditorconfig": true
+		"enabled": true
 	},
 	"linter": {
 		"enabled": true,

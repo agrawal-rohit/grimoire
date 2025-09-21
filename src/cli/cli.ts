@@ -29,32 +29,30 @@ class CLI {
 
 	header(title: string): void {
 		log.message(" ", {
-			symbol: chalk.bgCyanBright.blackBright(` ${title} `),
+			symbol: chalk.bgCyan.black(` ${title} `),
 		});
 	}
 
 	intro(message: string): void {
 		console.log();
-		intro(
-			`${chalk.bgGreenBright.blackBright(" @agrawalrohit/create-lib ")} ${message}`,
-		);
+		intro(`${chalk.bgGreen.black(" @agrawalrohit/create-lib ")} ${message}`);
 	}
 
 	outro(message: string): void {
-		outro(`${chalk.bgGreenBright.blackBright(" done ")} ${message}`);
+		outro(`${chalk.bgGreen.black(" done ")} ${message}`);
 	}
 
 	warn(message: string): void {
-		console.warn(`${chalk.bgYellowBright.blackBright(" warn ")} ${message}`);
+		console.warn(`${chalk.bgYellow.black(" warn ")} ${message}`);
 	}
 
 	error(message: string): void {
-		console.error(`${chalk.bgRedBright.blackBright(" error ")} ${message}`);
+		console.error(`${chalk.bgRed.black(" error ")} ${message}`);
 		process.exit(1);
 	}
 
 	end(message: string): void {
-		console.error(`${chalk.bgRedBright.blackBright(" end ")} ${message}`);
+		console.error(`${chalk.bgRed.black(" end ")} ${message}`);
 		console.log();
 		process.exit(0);
 	}
@@ -94,7 +92,7 @@ class CLI {
 						}));
 						return task.newListr(subTasks, {
 							rendererOptions: {
-								collapseErrors: false,
+								collapseErrors: true,
 							},
 						});
 					},
@@ -102,7 +100,7 @@ class CLI {
 			],
 			{
 				rendererOptions: {
-					collapseErrors: false,
+					collapseErrors: true,
 				},
 			},
 		);
