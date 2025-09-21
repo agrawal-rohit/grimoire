@@ -10,15 +10,15 @@ import { run } from "./shell.utils";
  * @returns The config value if set; undefined otherwise
  */
 function readGitConfig(key: string): string | undefined {
-  try {
-    const out = execSync(`git config --get ${key}`, {
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    const s = out.toString().trim();
-    return s.length ? s : undefined;
-  } catch {
-    return undefined;
-  }
+	try {
+		const out = execSync(`git config --get ${key}`, {
+			stdio: ["ignore", "pipe", "ignore"],
+		});
+		const s = out.toString().trim();
+		return s.length ? s : undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 /**
@@ -26,7 +26,7 @@ function readGitConfig(key: string): string | undefined {
  * @returns The configured git user.name, or undefined if not available.
  */
 export function getGitUsername(): string | undefined {
-  return readGitConfig("user.name");
+	return readGitConfig("user.name");
 }
 
 /**
@@ -34,7 +34,7 @@ export function getGitUsername(): string | undefined {
  * @returns The configured git user.email, or undefined if not available.
  */
 export function getGitEmail(): string | undefined {
-  return readGitConfig("user.email");
+	return readGitConfig("user.email");
 }
 
 /**
@@ -43,7 +43,7 @@ export function getGitEmail(): string | undefined {
  * @returns true if a .git directory exists inside cwd; false otherwise
  */
 export function isGitRepo(cwd: string): boolean {
-  return fs.existsSync(path.join(cwd, ".git"));
+	return fs.existsSync(path.join(cwd, ".git"));
 }
 
 /**
@@ -52,30 +52,30 @@ export function isGitRepo(cwd: string): boolean {
  * @throws Error when initialization fails due to underlying git issues
  */
 export function initGitRepo(cwd: string): void {
-  if (isGitRepo(cwd)) return;
+	if (isGitRepo(cwd)) return;
 
-  const defaultBranch = "main";
+	const defaultBranch = "main";
 
-  try {
-    // Initialize repository
-    run("git init", { cwd, stdio: "inherit" });
+	try {
+		// Initialize repository
+		run("git init", { cwd, stdio: "inherit" });
 
-    // Try to set the default branch to the desired name.
-    // On newer git versions, `git branch -M` works, older ones may require `symbolic-ref`.
-    try {
-      run(`git branch -M ${defaultBranch}`, { cwd, stdio: "inherit" });
-    } catch {
-      try {
-        run(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
-          cwd,
-          stdio: "inherit",
-        });
-      } catch {
-        // If both attempts fail, continue without failing the setup.
-      }
-    }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new Error(`Failed to initialize git repository in ${cwd}: ${msg}`);
-  }
+		// Try to set the default branch to the desired name.
+		// On newer git versions, `git branch -M` works, older ones may require `symbolic-ref`.
+		try {
+			run(`git branch -M ${defaultBranch}`, { cwd, stdio: "inherit" });
+		} catch {
+			try {
+				run(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
+					cwd,
+					stdio: "inherit",
+				});
+			} catch {
+				// If both attempts fail, continue without failing the setup.
+			}
+		}
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		throw new Error(`Failed to initialize git repository in ${cwd}: ${msg}`);
+	}
 }

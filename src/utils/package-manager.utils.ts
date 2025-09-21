@@ -8,11 +8,11 @@ import { commandExists, run } from "./shell.utils";
  * @returns true if the name is valid for new packages; otherwise an error string.
  */
 export function validatePackageName(name: string): true | string {
-  const res = validatePkg(name);
-  if (res.validForNewPackages) return true;
+	const res = validatePkg(name);
+	if (res.validForNewPackages) return true;
 
-  const errors = [...(res.errors || []), ...(res.warnings || [])].join(", ");
-  return `Invalid library name: ${errors}`;
+	const errors = [...(res.errors || []), ...(res.warnings || [])].join(", ");
+	return `Invalid library name: ${errors}`;
 }
 
 /**
@@ -21,21 +21,21 @@ export function validatePackageName(name: string): true | string {
  * @param tool - The package manager to activate ("pnpm" | "yarn").
  */
 function activateViaCorepack(tool: "pnpm" | "yarn"): boolean {
-  if (!commandExists("corepack")) return false;
-  try {
-    // Idempotent enable
-    run("corepack enable", { stdio: "inherit" });
+	if (!commandExists("corepack")) return false;
+	try {
+		// Idempotent enable
+		run("corepack enable", { stdio: "inherit" });
 
-    if (tool === "pnpm") {
-      run("corepack prepare pnpm@latest --activate", { stdio: "inherit" });
-    } else {
-      run("corepack prepare yarn@stable --activate", { stdio: "inherit" });
-    }
+		if (tool === "pnpm") {
+			run("corepack prepare pnpm@latest --activate", { stdio: "inherit" });
+		} else {
+			run("corepack prepare yarn@stable --activate", { stdio: "inherit" });
+		}
 
-    return commandExists(tool);
-  } catch {
-    return false;
-  }
+		return commandExists(tool);
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -44,12 +44,12 @@ function activateViaCorepack(tool: "pnpm" | "yarn"): boolean {
  * @returns true if the tool is available afterwards.
  */
 function installGloballyWithNpm(pkg: string): boolean {
-  try {
-    run(`npm i -g ${pkg}`, { stdio: "inherit" });
-    return commandExists(pkg);
-  } catch {
-    return false;
-  }
+	try {
+		run(`npm i -g ${pkg}`, { stdio: "inherit" });
+		return commandExists(pkg);
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -59,78 +59,78 @@ function installGloballyWithNpm(pkg: string): boolean {
  * @param pm - The package manager to verify/resolve.
  */
 export function ensurePackageManager(pm: PackageManager): string {
-  switch (pm) {
-    case PackageManager.NPM: {
-      if (!commandExists("npm")) {
-        throw new Error(
-          "npm is not available on PATH. Please install Node.js (which includes npm) and try again."
-        );
-      }
+	switch (pm) {
+		case PackageManager.NPM: {
+			if (!commandExists("npm")) {
+				throw new Error(
+					"npm is not available on PATH. Please install Node.js (which includes npm) and try again.",
+				);
+			}
 
-      const version = run("npm --version");
-      return `npm@${version}`;
-    }
+			const version = run("npm --version");
+			return `npm@${version}`;
+		}
 
-    case PackageManager.PNPM: {
-      if (commandExists("pnpm")) {
-        const version = run("pnpm --version");
-        return `pnpm@${version}`;
-      }
+		case PackageManager.PNPM: {
+			if (commandExists("pnpm")) {
+				const version = run("pnpm --version");
+				return `pnpm@${version}`;
+			}
 
-      // Try Corepack activation
-      if (activateViaCorepack("pnpm")) {
-        const version = run("pnpm --version");
-        return `pnpm@${version}`;
-      }
+			// Try Corepack activation
+			if (activateViaCorepack("pnpm")) {
+				const version = run("pnpm --version");
+				return `pnpm@${version}`;
+			}
 
-      // Fallback: npm -g install
-      if (installGloballyWithNpm("pnpm")) {
-        const version = run("pnpm --version");
-        return `pnpm@${version}`;
-      }
+			// Fallback: npm -g install
+			if (installGloballyWithNpm("pnpm")) {
+				const version = run("pnpm --version");
+				return `pnpm@${version}`;
+			}
 
-      throw new Error(
-        "Failed to install pnpm automatically. Please install pnpm and re-run the command."
-      );
-    }
+			throw new Error(
+				"Failed to install pnpm automatically. Please install pnpm and re-run the command.",
+			);
+		}
 
-    case PackageManager.YARN: {
-      if (commandExists("yarn")) {
-        const version = run("yarn --version");
-        return `yarn@${version}`;
-      }
+		case PackageManager.YARN: {
+			if (commandExists("yarn")) {
+				const version = run("yarn --version");
+				return `yarn@${version}`;
+			}
 
-      // Try Corepack activation
-      if (activateViaCorepack("yarn")) {
-        const version = run("yarn --version");
-        return `yarn@${version}`;
-      }
+			// Try Corepack activation
+			if (activateViaCorepack("yarn")) {
+				const version = run("yarn --version");
+				return `yarn@${version}`;
+			}
 
-      // Fallback: npm -g install
-      if (installGloballyWithNpm("yarn")) {
-        const version = run("yarn --version");
-        return `yarn@${version}`;
-      }
+			// Fallback: npm -g install
+			if (installGloballyWithNpm("yarn")) {
+				const version = run("yarn --version");
+				return `yarn@${version}`;
+			}
 
-      throw new Error(
-        "Failed to install yarn automatically. Please install yarn and re-run the command."
-      );
-    }
+			throw new Error(
+				"Failed to install yarn automatically. Please install yarn and re-run the command.",
+			);
+		}
 
-    case PackageManager.BUN: {
-      if (!commandExists("bun")) {
-        throw new Error(
-          "Bun is not installed. Please install Bun from https://bun.sh and re-run."
-        );
-      }
-      const version = run("bun --version");
-      return `bun@${version}`;
-    }
+		case PackageManager.BUN: {
+			if (!commandExists("bun")) {
+				throw new Error(
+					"Bun is not installed. Please install Bun from https://bun.sh and re-run.",
+				);
+			}
+			const version = run("bun --version");
+			return `bun@${version}`;
+		}
 
-    default: {
-      // Narrow type just in case a string sneaks through
-      const val = String(pm);
-      throw new Error(`Unsupported package manager: ${val}`);
-    }
-  }
+		default: {
+			// Narrow type just in case a string sneaks through
+			const val = String(pm);
+			throw new Error(`Unsupported package manager: ${val}`);
+		}
+	}
 }

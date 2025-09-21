@@ -7,9 +7,9 @@ import path from "node:path";
  * @param dirPath - The path to the directory to ensure exists.
  */
 export function ensureDir(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+	if (!fs.existsSync(dirPath)) {
+		fs.mkdirSync(dirPath, { recursive: true });
+	}
 }
 
 /**
@@ -19,8 +19,8 @@ export function ensureDir(dirPath: string): void {
  * @param data - The data to include this in file.
  */
 export function writeFile(filePath: string, data: string): void {
-  const dir = path.dirname(filePath);
-  ensureDir(dir);
+	const dir = path.dirname(filePath);
+	ensureDir(dir);
 
-  fs.writeFileSync(filePath, data, "utf8");
+	fs.writeFileSync(filePath, data, "utf8");
 }

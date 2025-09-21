@@ -3,6 +3,6 @@
  * @type {import('lint-staged').Configuration}
  */
 module.exports = {
-  // Only run Biome on code/config files that Biome actually processes (see biome.json).
-  "**/*.{js,ts,jsx,tsx,cjs,mjs,json}": "pnpm check",
+	// Only run Biome on code/config files that Biome actually processes (see biome.json).
+	"**/*.{js,ts,jsx,tsx,cjs,mjs,json,css}": "pnpm check",
 };

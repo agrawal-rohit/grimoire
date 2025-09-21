@@ -8,8 +8,8 @@ Please read the repository's Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDU
 
 ## Development workflow
 
-1. Create a branch from the default branch (`next`):  
-   `git checkout -b feat/<scope>-short-description`  
+1. Create a branch from the default branch (`next`):
+   `git checkout -b feat/<scope>-short-description`
    _Use `feat`, `fix`, `chore` etc. for branch naming where it helps communicate intent._
 
 2. Make small, focused commits that each pass tests and linting.
@@ -55,7 +55,7 @@ Examples:
 - `fix(core): handle edge case in parser`
 - `docs: update README usage section`
 
-Common types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `revert`.  
+Common types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `revert`.
 Use `!` and a `BREAKING CHANGE:` footer for breaking changes and include migration notes.
 
 **Note:** Our release tooling derives semver bumps from commit types — write meaningful commit messages.
