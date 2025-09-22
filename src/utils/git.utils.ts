@@ -1,8 +1,7 @@
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { toSlug } from "./common.utils";
-import { run } from "./shell.utils";
+import { runAsync } from "./shell.utils";
 
 /**
  * Read a git config value for a given key from the current environment.
@@ -10,12 +9,10 @@ import { run } from "./shell.utils";
  * @param key - Fully qualified git config key (e.g., "user.name", "user.email")
  * @returns The config value if set; undefined otherwise
  */
-function readGitConfig(key: string): string | undefined {
+async function readGitConfig(key: string): Promise<string | undefined> {
 	try {
-		const out = execSync(`git config --get ${key}`, {
-			stdio: ["ignore", "pipe", "ignore"],
-		});
-		const s = out.toString().trim();
+		const out = await runAsync(`git config --get ${key}`, { stdio: "pipe" });
+		const s = out.trim();
 		return s.length ? s : undefined;
 	} catch {
 		return undefined;
@@ -26,16 +23,16 @@ function readGitConfig(key: string): string | undefined {
  * Get git user.name from current git configuration.
  * @returns The configured git user.name, or undefined if not available.
  */
-export function getGitUsername(): string | undefined {
-	return readGitConfig("user.name");
+export async function getGitUsername(): Promise<string | undefined> {
+	return await readGitConfig("user.name");
 }
 
 /**
  * Get git user.email from current git configuration.
  * @returns The configured git user.email, or undefined if not available.
  */
-export function getGitEmail(): string | undefined {
-	return readGitConfig("user.email");
+export async function getGitEmail(): Promise<string | undefined> {
+	return await readGitConfig("user.email");
 }
 
 /**
@@ -52,22 +49,25 @@ export function isGitRepo(cwd: string): boolean {
  * @param cwd - Absolute path to the target directory where git should be initialized
  * @throws Error when initialization fails due to underlying git issues
  */
-export function initGitRepo(cwd: string): void {
+export async function initGitRepo(cwd: string): Promise<void> {
 	if (isGitRepo(cwd)) return;
 
 	const defaultBranch = "main";
 
 	try {
 		// Initialize repository
-		run("git init", { cwd, stdio: "ignore" });
+		await runAsync("git init", { cwd, stdio: "ignore" });
 
 		// Try to set the default branch to the desired name.
 		// On newer git versions, `git branch -M` works, older ones may require `symbolic-ref`.
 		try {
-			run(`git branch -M ${defaultBranch}`, { cwd, stdio: "ignore" });
+			await runAsync(`git branch -M ${defaultBranch}`, {
+				cwd,
+				stdio: "ignore",
+			});
 		} catch {
 			try {
-				run(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
+				await runAsync(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
 					cwd,
 					stdio: "ignore",
 				});

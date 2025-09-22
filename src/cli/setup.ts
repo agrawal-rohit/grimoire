@@ -11,6 +11,7 @@ import {
 } from "../utils/pkg-manager.utils";
 import {
 	configurePrecommit,
+	configureRelease,
 	configureStyling,
 	configureTargetFramework,
 	createProjectDirectory,
@@ -64,19 +65,22 @@ async function runSetup(): Promise<void> {
 		{
 			title: "Create project directory",
 			task: async () => {
-				targetDir = createProjectDirectory(process.cwd(), answers.project.name);
+				targetDir = await createProjectDirectory(
+					process.cwd(),
+					answers.project.name,
+				);
 			},
 		},
 		{
 			title: "Initialize git repository",
 			task: async () => {
-				initGitRepo(targetDir);
+				await initGitRepo(targetDir);
 			},
 		},
 		{
-			title: "Ensure package manager",
+			title: `Ensure ${answers.project.packageManager ?? PackageManager.PNPM} is installed`,
 			task: async () => {
-				packageManagerVersion = ensurePackageManager(
+				packageManagerVersion = await ensurePackageManager(
 					answers.project.packageManager ?? PackageManager.PNPM,
 				);
 			},
@@ -84,7 +88,7 @@ async function runSetup(): Promise<void> {
 		{
 			title: "Create package.json",
 			task: async () => {
-				writePackageJson(targetDir, answers, packageManagerVersion);
+				await writePackageJson(targetDir, answers, packageManagerVersion);
 			},
 		},
 		{
@@ -99,6 +103,13 @@ async function runSetup(): Promise<void> {
 				await writeStarterTemplate(targetDir);
 			},
 		},
+		...conditionalTask(
+			answers.project.shouldReleaseToNPM,
+			"Configuring setup for NPM release",
+			async () => {
+				await configureRelease(targetDir, answers);
+			},
+		),
 		...conditionalTask(
 			answers.tooling.precommitHooks,
 			"Integrating pre-commit hooks",

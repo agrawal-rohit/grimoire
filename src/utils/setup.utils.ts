@@ -6,7 +6,12 @@ import {
 	TargetFramework,
 } from "../types/prompts.types";
 import { TEMPLATES_DIR } from "./constants.utils";
-import { copyDirSafe, copyFileSafe, ensureDir, writeFile } from "./fs.utils";
+import {
+	copyDirSafeAsync,
+	copyFileSafeAsync,
+	ensureDirAsync,
+	writeFileAsync,
+} from "./fs.utils";
 import { estimateGithubRepoUrl } from "./git.utils";
 import { installDevDependencies } from "./pkg-manager.utils";
 
@@ -30,12 +35,12 @@ export function buildAuthorField(
  * @param answers - Aggregated answers, used for the library name (directory).
  * @returns Object with the absolute targetDir.
  */
-export function createProjectDirectory(
+export async function createProjectDirectory(
 	cwd: string,
 	projectName: string,
-): string {
+): Promise<string> {
 	const targetDir = path.resolve(cwd, projectName);
-	ensureDir(targetDir);
+	await ensureDirAsync(targetDir);
 
 	return targetDir;
 }
@@ -48,11 +53,11 @@ export function createProjectDirectory(
  * @returns The final package.json object that was persisted to disk.
  * @throws If an existing package.json is invalid JSON.
  */
-export function writePackageJson(
+export async function writePackageJson(
 	targetDir: string,
 	answers: PromptAnswers,
 	packageManagerVersion: string,
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
 	// Estimate repository and homepage from author name/git username and project name
 	const estimatedRepoUrl = estimateGithubRepoUrl(
 		answers.author.gitUsername,
@@ -93,7 +98,7 @@ export function writePackageJson(
 		pkgJson.bugs = `${pkgJson.repository}/issues`;
 	}
 
-	writeFile(
+	await writeFileAsync(
 		path.join(targetDir, "package.json"),
 		JSON.stringify(pkgJson, undefined, 2),
 	);
@@ -112,23 +117,23 @@ export async function writeCommonConfig(
 	const commonTplRoot = path.join(TEMPLATES_DIR, "common");
 
 	// Linters and repo-level configs
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, ".nvmrc"),
 		path.join(targetDir, ".nvmrc"),
 	);
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "biome.template.json"),
 		path.join(targetDir, "biome.json"),
 	);
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "jest.config.js"),
 		path.join(targetDir, "jest.config.js"),
 	);
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, ".gitignore"),
 		path.join(targetDir, ".gitignore"),
 	);
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "tsconfig.json"),
 		path.join(targetDir, "tsconfig.json"),
 	);
@@ -136,25 +141,25 @@ export async function writeCommonConfig(
 	// Community files
 	const community = answers.tooling.community;
 	if (community.codeOfConduct)
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(commonTplRoot, "CODE_OF_CONDUCT.md"),
 			path.join(targetDir, "CODE_OF_CONDUCT.md"),
 		);
 
 	if (community.contributing)
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(commonTplRoot, "CONTRIBUTING.md"),
 			path.join(targetDir, "CONTRIBUTING.md"),
 		);
 
 	if (community.license)
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(commonTplRoot, "LICENSE"),
 			path.join(targetDir, "LICENSE"),
 		);
 
 	if (community.readme)
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(commonTplRoot, "README.md"),
 			path.join(targetDir, "README.md"),
 		);
@@ -164,24 +169,24 @@ export async function writeCommonConfig(
 	const ghRoot = path.join(targetDir, ".github");
 
 	if (answers.tooling.github.dependabot)
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(ghTplRoot, "dependabot.yml"),
 			path.join(ghRoot, "dependabot.yml"),
 		);
 
 	if (answers.tooling.github.workflows)
-		copyDirSafe(
+		await copyDirSafeAsync(
 			path.join(ghTplRoot, "workflows"),
 			path.join(ghRoot, "workflows"),
 		);
 
 	if (answers.tooling.github.templates) {
-		copyDirSafe(
+		await copyDirSafeAsync(
 			path.join(ghTplRoot, "issue_template"),
 			path.join(ghRoot, "issue_template"),
 		);
 
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(ghTplRoot, "pull_request_template.md"),
 			path.join(ghRoot, "pull_request_template.md"),
 		);
@@ -211,8 +216,14 @@ export async function writeStarterTemplate(targetDir: string): Promise<void> {
 	const commonTplRoot = path.join(TEMPLATES_DIR, "common");
 
 	// Baseline source and tests folders
-	copyDirSafe(path.join(commonTplRoot, "src"), path.join(targetDir, "src"));
-	copyDirSafe(path.join(commonTplRoot, "tests"), path.join(targetDir, "tests"));
+	await copyDirSafeAsync(
+		path.join(commonTplRoot, "src"),
+		path.join(targetDir, "src"),
+	);
+	await copyDirSafeAsync(
+		path.join(commonTplRoot, "tests"),
+		path.join(targetDir, "tests"),
+	);
 }
 
 /**
@@ -229,7 +240,7 @@ export async function configureRelease(
 	if (!answers.project.shouldReleaseToNPM) return;
 
 	const commonTplRoot = path.join(TEMPLATES_DIR, "common");
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "release.config.cjs"),
 		path.join(targetDir, "release.config.cjs"),
 	);
@@ -253,15 +264,15 @@ export async function configurePrecommit(
 	if (!answers.tooling.precommitHooks) return;
 
 	const commonTplRoot = path.join(TEMPLATES_DIR, "common");
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "commitlint.config.js"),
 		path.join(targetDir, "commitlint.config.js"),
 	);
-	copyFileSafe(
+	await copyFileSafeAsync(
 		path.join(commonTplRoot, "lint-staged.config.js"),
 		path.join(targetDir, "lint-staged.config.js"),
 	);
-	copyDirSafe(
+	await copyDirSafeAsync(
 		path.join(commonTplRoot, ".husky"),
 		path.join(targetDir, ".husky"),
 	);
@@ -292,16 +303,16 @@ export async function configureStyling(
 		const twTplRoot = path.join(TEMPLATES_DIR, "tailwindcss");
 
 		// Root configs
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(twTplRoot, "postcss.config.js"),
 			path.join(targetDir, "postcss.config.js"),
 		);
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(twTplRoot, "tailwind.config.ts"),
 			path.join(targetDir, "tailwind.config.ts"),
 		);
 		// Styles entrypoint
-		copyFileSafe(
+		await copyFileSafeAsync(
 			path.join(twTplRoot, "tailwind.css"),
 			path.join(targetDir, "src", "styles", "tailwind.css"),
 		);
@@ -330,6 +341,6 @@ export async function configureTargetFramework(
 	// React integration
 	if (answers.project.framework === TargetFramework.REACT) {
 		const reactTplRoot = path.join(TEMPLATES_DIR, "react");
-		copyDirSafe(reactTplRoot, targetDir);
+		await copyDirSafeAsync(reactTplRoot, targetDir);
 	}
 }

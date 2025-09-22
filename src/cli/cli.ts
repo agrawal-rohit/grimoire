@@ -47,12 +47,13 @@ class CLI {
 	}
 
 	error(message: string): void {
-		console.error(`${chalk.bgRed.black(" error ")} ${message}`);
+		console.log();
+		console.error(`${chalk.bgRed(" error ")} ${message}`);
 		process.exit(1);
 	}
 
 	end(message: string): void {
-		console.error(`${chalk.bgRed.black(" end ")} ${message}`);
+		console.error(`${chalk.bgRed(" end ")} ${message}`);
 		console.log();
 		process.exit(0);
 	}

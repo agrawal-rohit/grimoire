@@ -222,8 +222,8 @@ export async function promptToolingInputs(
 export async function promptAuthorInputs(
 	project: PromptAnswers["project"],
 ): Promise<PromptAnswers["author"]> {
-	const gitName = getGitUsername();
-	const inferredGitEmail = getGitEmail();
+	const gitName = await getGitUsername();
+	const inferredGitEmail = await getGitEmail();
 
 	const suggestedUsername = gitName
 		? gitName.toLowerCase().replace(/\s+/g, "")

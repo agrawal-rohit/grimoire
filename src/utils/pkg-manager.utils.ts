@@ -1,24 +1,28 @@
 import { PackageManager } from "../types/prompts.types";
-import { commandExists, run } from "./shell.utils";
+import { commandExistsAsync, runAsync } from "./shell.utils";
 
 /**
  * Try to activate pnpm/yarn via Corepack.
  * Returns true if the tool is available afterwards.
  * @param tool - The package manager to activate ("pnpm" | "yarn").
  */
-function activateViaCorepack(tool: "pnpm" | "yarn"): boolean {
-	if (!commandExists("corepack")) return false;
+async function activateViaCorepack(tool: "pnpm" | "yarn"): Promise<boolean> {
+	if (!(await commandExistsAsync("corepack"))) return false;
 	try {
 		// Idempotent enable
-		run("corepack enable", { stdio: "ignore" });
+		await runAsync("corepack enable", { stdio: "ignore" });
 
 		if (tool === "pnpm") {
-			run("corepack prepare pnpm@latest --activate", { stdio: "ignore" });
+			await runAsync("corepack prepare pnpm@latest --activate", {
+				stdio: "ignore",
+			});
 		} else {
-			run("corepack prepare yarn@stable --activate", { stdio: "ignore" });
+			await runAsync("corepack prepare yarn@stable --activate", {
+				stdio: "ignore",
+			});
 		}
 
-		return commandExists(tool);
+		return await commandExistsAsync(tool);
 	} catch {
 		return false;
 	}
@@ -29,10 +33,10 @@ function activateViaCorepack(tool: "pnpm" | "yarn"): boolean {
  * @param pkg - The package name to install globally (e.g., "pnpm").
  * @returns true if the tool is available afterwards.
  */
-function installGloballyWithNpm(pkg: string): boolean {
+async function installGloballyWithNpm(pkg: string): Promise<boolean> {
 	try {
-		run(`npm i -g ${pkg}`, { stdio: "ignore" });
-		return commandExists(pkg);
+		await runAsync(`npm i -g ${pkg}`, { stdio: "ignore" });
+		return await commandExistsAsync(pkg);
 	} catch {
 		return false;
 	}
@@ -44,34 +48,36 @@ function installGloballyWithNpm(pkg: string): boolean {
  * that can be added to package.json's "packageManager" field.
  * @param pm - The package manager to verify/resolve.
  */
-export function ensurePackageManager(pm: PackageManager): string {
+export async function ensurePackageManager(
+	pm: PackageManager,
+): Promise<string> {
 	switch (pm) {
 		case PackageManager.NPM: {
-			if (!commandExists("npm")) {
+			if (!(await commandExistsAsync("npm"))) {
 				throw new Error(
 					"npm is not available on PATH. Please install Node.js (which includes npm) and try again.",
 				);
 			}
 
-			const version = run("npm --version");
+			const version = await runAsync("npm --version");
 			return `npm@${version}`;
 		}
 
 		case PackageManager.PNPM: {
-			if (commandExists("pnpm")) {
-				const version = run("pnpm --version");
+			if (await commandExistsAsync("pnpm")) {
+				const version = await runAsync("pnpm --version");
 				return `pnpm@${version}`;
 			}
 
 			// Try Corepack activation
-			if (activateViaCorepack("pnpm")) {
-				const version = run("pnpm --version");
+			if (await activateViaCorepack("pnpm")) {
+				const version = await runAsync("pnpm --version");
 				return `pnpm@${version}`;
 			}
 
 			// Fallback: npm -g install
-			if (installGloballyWithNpm("pnpm")) {
-				const version = run("pnpm --version");
+			if (await installGloballyWithNpm("pnpm")) {
+				const version = await runAsync("pnpm --version");
 				return `pnpm@${version}`;
 			}
 
@@ -81,20 +87,20 @@ export function ensurePackageManager(pm: PackageManager): string {
 		}
 
 		case PackageManager.YARN: {
-			if (commandExists("yarn")) {
-				const version = run("yarn --version");
+			if (await commandExistsAsync("yarn")) {
+				const version = await runAsync("yarn --version");
 				return `yarn@${version}`;
 			}
 
 			// Try Corepack activation
-			if (activateViaCorepack("yarn")) {
-				const version = run("yarn --version");
+			if (await activateViaCorepack("yarn")) {
+				const version = await runAsync("yarn --version");
 				return `yarn@${version}`;
 			}
 
 			// Fallback: npm -g install
-			if (installGloballyWithNpm("yarn")) {
-				const version = run("yarn --version");
+			if (await installGloballyWithNpm("yarn")) {
+				const version = await runAsync("yarn --version");
 				return `yarn@${version}`;
 			}
 
@@ -104,12 +110,12 @@ export function ensurePackageManager(pm: PackageManager): string {
 		}
 
 		case PackageManager.BUN: {
-			if (!commandExists("bun")) {
+			if (!(await commandExistsAsync("bun"))) {
 				throw new Error(
 					"Bun is not installed. Please install Bun from https://bun.sh and re-run.",
 				);
 			}
-			const version = run("bun --version");
+			const version = await runAsync("bun --version");
 			return `bun@${version}`;
 		}
 
@@ -139,7 +145,33 @@ export async function installAllDependencies(
 					? "bun install"
 					: "npm install";
 
-	run(installCmd, { cwd: targetDir, stdio: "ignore" });
+	await runAsync(installCmd, { cwd: targetDir, stdio: "ignore" });
+}
+
+/**
+ * Install a list of dependencies for the project.
+ * @param targetDir - Absolute path to the project directory.
+ * @param pm - Selected package manager.
+ * @param packages - A list of dependency specifiers (e.g., ["react", "emotion"]).
+ */
+export async function installDependencies(
+	targetDir: string,
+	pm: PackageManager,
+	packages: string[],
+): Promise<void> {
+	if (!packages || packages.length === 0) return;
+
+	const specs = packages.join(" ");
+	const cmd =
+		pm === PackageManager.PNPM
+			? `pnpm add ${specs}`
+			: pm === PackageManager.YARN
+				? `yarn add ${specs}`
+				: pm === PackageManager.BUN
+					? `bun add ${specs}`
+					: `npm install ${specs}`;
+
+	await runAsync(cmd, { cwd: targetDir, stdio: "ignore" });
 }
 
 /**
@@ -165,5 +197,5 @@ export async function installDevDependencies(
 					? `bun add -d ${specs}`
 					: `npm install -D ${specs}`;
 
-	run(cmd, { cwd: targetDir, stdio: "ignore" });
+	await runAsync(cmd, { cwd: targetDir, stdio: "ignore" });
 }

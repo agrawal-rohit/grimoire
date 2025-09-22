@@ -2,75 +2,74 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Ensure a directory exists (mkdir -p behavior).
- * Creates the directory and any necessary parent directories if they do not exist.
- * @param dirPath - The path to the directory to ensure exists.
+ * Ensure a directory exists (mkdir -p).
+ * @param dirPath - Directory to create if missing.
  */
-export function ensureDir(dirPath: string): void {
-	if (!fs.existsSync(dirPath)) {
-		fs.mkdirSync(dirPath, { recursive: true });
-	}
+export async function ensureDirAsync(dirPath: string): Promise<void> {
+	await fs.promises.mkdir(dirPath, { recursive: true });
 }
 
 /**
- * Serialize and write data to disk.
- * Ensures the parent directory exists before writing.
- * @param filePath - The path to the file to write.
- * @param data - The data to include this in file.
+ * Write data to a file, ensuring parent directories exist.
+ * @param filePath - Absolute or relative path to the file.
+ * @param data - File contents.
  */
-export function writeFile(filePath: string, data: string): void {
+export async function writeFileAsync(
+	filePath: string,
+	data: string,
+): Promise<void> {
 	const dir = path.dirname(filePath);
-	ensureDir(dir);
-
-	fs.writeFileSync(filePath, data, "utf8");
+	await ensureDirAsync(dir);
+	await fs.promises.writeFile(filePath, data, "utf8");
 }
 
 /**
- * Check if a path exists and is a directory.
- * @param p - Path to check.
- * @returns true if the path exists and is a directory; false otherwise.
- */
-export function isDir(p: string): boolean {
-	return fs.existsSync(p) && fs.statSync(p).isDirectory();
-}
-
-/**
- * Check if a path exists and is a file.
- * @param p - Path to check.
- * @returns true if the path exists and is a file; false otherwise.
- */
-export function isFile(p: string): boolean {
-	return fs.existsSync(p) && fs.statSync(p).isFile();
-}
-
-/**
- * Copy a file from src to dest, creating parent directories as needed.
- * Silently no-ops if the source file does not exist.
+ * Copy a file if it exists, ensuring destination directory exists.
+ * No-ops when source is missing or is not a regular file.
  * @param src - Source file path.
  * @param dest - Destination file path.
  */
-export function copyFileSafe(src: string, dest: string): void {
-	if (!isFile(src)) return;
-	ensureDir(path.dirname(dest));
-	fs.copyFileSync(src, dest);
+export async function copyFileSafeAsync(
+	src: string,
+	dest: string,
+): Promise<void> {
+	try {
+		const stat = await fs.promises.stat(src);
+		if (!stat.isFile()) return;
+	} catch {
+		return;
+	}
+	await ensureDirAsync(path.dirname(dest));
+	await fs.promises.copyFile(src, dest);
 }
 
 /**
- * Recursively copy a directory. If the source does not exist, it no-ops.
+ * Recursively copy a directory tree. If the source directory does not exist, it no-ops.
  * @param srcDir - Source directory path.
  * @param destDir - Destination directory path.
  */
-export function copyDirSafe(srcDir: string, destDir: string): void {
-	if (!isDir(srcDir)) return;
-	ensureDir(destDir);
-	for (const entry of fs.readdirSync(srcDir)) {
-		const srcPath = path.join(srcDir, entry);
-		const destPath = path.join(destDir, entry);
-		const stat = fs.statSync(srcPath);
-		if (stat.isDirectory()) {
-			copyDirSafe(srcPath, destPath);
-		} else {
-			copyFileSafe(srcPath, destPath);
+export async function copyDirSafeAsync(
+	srcDir: string,
+	destDir: string,
+): Promise<void> {
+	try {
+		const st = await fs.promises.stat(srcDir);
+		if (!st.isDirectory()) return;
+	} catch {
+		return;
+	}
+
+	await ensureDirAsync(destDir);
+	const entries = await fs.promises.readdir(srcDir, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const srcPath = path.join(srcDir, entry.name);
+		const destPath = path.join(destDir, entry.name);
+
+		if (entry.isDirectory()) {
+			await copyDirSafeAsync(srcPath, destPath);
+		} else if (entry.isFile()) {
+			await copyFileSafeAsync(srcPath, destPath);
 		}
 	}
 }

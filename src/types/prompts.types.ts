@@ -65,10 +65,10 @@ export enum PackageManager {
 
 export enum TargetFramework {
 	NONE = "none",
-	REACT = "react",
+	REACT = "React",
 }
 
 export enum Styling {
 	NONE = "none",
-	TAILWINDCSS = "tailwindcss",
+	TAILWINDCSS = "Tailwind CSS",
 }
