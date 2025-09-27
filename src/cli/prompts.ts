@@ -1,269 +1,119 @@
-import type { PromptAnswers } from "../types/prompts.types";
-import {
-	PackageManager,
-	Styling,
-	TargetFramework,
-} from "../types/prompts.types";
-import { validatePackageName } from "../utils/common.utils";
-import { getGitEmail, getGitUsername } from "../utils/git.utils";
-import cli from "./cli";
+import consola, {
+	type ConfirmPromptOptions,
+	type MultiSelectOptions,
+	type SelectPromptOptions,
+	type TextPromptOptions,
+} from "consola";
+import logger from "./logger";
 
 /**
- * Gather relevant configuration to proceed with the library creation
- * @returns A JSON object with the library configuration
+ * Handles cancellation when the prompt is canceled.
+ * Checks if the provided value is the cancel symbol and logs the cancellation message.
+ * @param value - The value returned from the prompt to check for cancellation.
  */
-export async function getSetupConfiguration(): Promise<PromptAnswers> {
-	cli.header("let's start with the basics");
-	const project = await promptProjectInputs();
-
-	cli.header("let's pick what we need");
-	const tooling = await promptToolingInputs(project);
-
-	cli.header("let's get to know you");
-	const author = await promptAuthorInputs(project);
-
-	const answers: PromptAnswers = {
-		project,
-		tooling,
-		author,
-	};
-
-	return answers;
+function handleCancel(value: unknown): void {
+	if (typeof value === "symbol" && value === Symbol.for("cancel")) {
+		logger.end("Operation canceled");
+	}
 }
 
-/**
- * Prompts the user for basic project information including name and description.
- * Validates the package name and throws an error if invalid.
- * @returns The project configuration object with name and description.
+/** Prompt for a text input (with optional validation and default).
+ * @param message - The prompt message to display.
+ * @param opts - Optional configuration options for the prompt, including validation.
+ * @param defaultValue - Optional default value for the input.
  */
-export async function promptProjectInputs(): Promise<PromptAnswers["project"]> {
-	const name = await cli.textInput(
-		"What should we call your library?",
-		{
-			validate: (val: string) =>
-				val.length ? undefined : "Library name is required",
-		},
-		"my-lib",
-	);
-
-	// Validate the final lib name
-	const validation = validatePackageName(name);
-	if (validation !== true) {
-		throw new Error(
-			typeof validation === "string" ? validation : "Invalid package name",
-		);
-	}
-
-	const description = await cli.textInput("What would it do?", {
-		placeholder: "Short description of the library",
+export async function textInput(
+	message: string,
+	opts: Omit<TextPromptOptions, "text"> & { required?: boolean } = {},
+	defaultValue?: string,
+): Promise<string> {
+	const raw = await consola.prompt(message, {
+		type: "text",
+		initial: defaultValue,
+		cancel: "symbol",
+		...opts,
 	});
 
-	const packageManager = await cli.selectInput<PackageManager>(
-		"Any preferred package manager?",
-		{
-			options: [
-				{ label: "pnpm", value: PackageManager.PNPM, hint: "Default" },
-				{ label: "npm", value: PackageManager.NPM },
-				{ label: "yarn", value: PackageManager.YARN },
-				{ label: "bun", value: PackageManager.BUN },
-			],
-		},
-		PackageManager.PNPM,
-	);
+	if (opts.required && !raw) logger.error("Package name is required");
 
-	const framework = await cli.selectInput<TargetFramework>(
-		"Are you building for a particular framework?",
-		{
-			options: [
-				{ label: "None", value: TargetFramework.NONE, hint: "Node" },
-				{ label: "React", value: TargetFramework.REACT },
-			],
-		},
-		TargetFramework.NONE,
-	);
+	handleCancel(raw);
 
-	const shouldReleaseToNPM = await cli.confirmInput(
-		"Would this be released to NPM?",
-		undefined,
-		true,
-	);
-
-	return {
-		name,
-		description,
-		packageManager,
-		shouldReleaseToNPM,
-		framework,
-	};
+	return raw.trim();
 }
 
 /**
- * Prompts the user for tooling preferences such as package manager, git initialization, and NPM release.
- * @returns The tooling configuration object.
+ * Prompt for a single selection from a list of options.
+ * User may type the number (1..n) or the exact value.
+ * @param message - The prompt message to display.
+ * @param opts - Optional configuration options for the select prompt.
+ * @param defaultValue - Optional default selected value.
  */
-export async function promptToolingInputs(
-	project: PromptAnswers["project"],
-): Promise<PromptAnswers["tooling"]> {
-	// Styling framework (only relevant for non-node libraries)
-	let styling: Styling = Styling.NONE;
-	if (project.framework !== TargetFramework.NONE) {
-		styling = await cli.selectInput<Styling>(
-			"Do you have any preferred styling solution?",
-			{
-				options: [
-					{ label: "None", value: Styling.NONE, hint: "Vanilla CSS" },
-					{ label: "Tailwind CSS", value: Styling.TAILWINDCSS },
-				],
-			},
-			Styling.TAILWINDCSS,
-		);
-	}
-	const precommitHooks = await cli.confirmInput(
-		"Do you want to use pre-commit hooks (for commit linting and pre-commit checks)?",
-		undefined,
-		true,
-	);
+export async function selectInput<Value extends string>(
+	message: string,
+	opts: Omit<SelectPromptOptions, "type"> = { options: [] },
+	defaultValue?: Value,
+): Promise<Value> {
+	const value: unknown = await consola.prompt(message, {
+		type: "select",
+		initial: defaultValue,
+		cancel: "symbol",
+		...opts,
+	});
 
-	const codacyEnabled = await cli.confirmInput(
-		"Do you want to use Codacy (for code quality & coverage)?",
-		undefined,
-		true,
-	);
+	handleCancel(value);
 
-	const githubChoices = await cli.multiselectInput(
-		"Would you like any repository helpers?",
-		{
-			options: [
-				{
-					value: "workflows",
-					label: `Github Actions workflows`,
-					hint: "for build and release automation",
-				},
-				{
-					value: "templates",
-					label: "Github templates",
-					hint: "for issues and pull requests",
-				},
-				{
-					value: "dependabot",
-					label: "Dependabot",
-					hint: "dependency upgrades",
-				},
-			],
-			required: false,
-		},
-		["workflows", "templates", "dependabot"],
-	);
-
-	// Community health files (only when releasing to NPM)
-	let community = {
-		codeOfConduct: false,
-		contributing: false,
-		license: false,
-		readme: false,
-	};
-	if (project.shouldReleaseToNPM) {
-		const communityChoices = await cli.multiselectInput(
-			"Which community files do you need?",
-			{
-				options: [
-					{
-						value: "code-of-conduct",
-						label: "CODE_OF_CONDUCT.md",
-						hint: "community guidelines",
-					},
-					{
-						value: "contributing",
-						label: "CONTRIBUTING.md",
-						hint: "guidelines for contributors",
-					},
-					{ value: "license", label: "LICENSE", hint: "MIT" },
-					{
-						value: "readme",
-						label: "README.md",
-						hint: "project documentation",
-					},
-				],
-				required: false,
-			},
-			["code-of-conduct", "contributing", "license", "readme"],
-		);
-		community = {
-			codeOfConduct: communityChoices.includes("code-of-conduct"),
-			contributing: communityChoices.includes("contributing"),
-			license: communityChoices.includes("license"),
-			readme: communityChoices.includes("readme"),
-		};
-	}
-
-	const githubWorkflows = githubChoices.includes("workflows");
-	const githubTemplates = githubChoices.includes("templates");
-	const githubDependabot = githubChoices.includes("dependabot");
-
-	return {
-		precommitHooks,
-		github: {
-			workflows: githubWorkflows,
-			templates: githubTemplates,
-			dependabot: githubDependabot,
-		},
-		codacy: codacyEnabled,
-		styling,
-		community,
-	};
+	return value as Value;
 }
 
-/**
- * Prompts the user for author information, inferring from git config where possible.
- * Only prompts for GitHub and NPM usernames if relevant based on tooling.
- * @param tooling - The tooling configuration to determine which fields to prompt for.
- * @returns The author configuration object.
+/** Prompt for multiple selections (comma-separated indices or values).
+ * @param message - The prompt message to display.
+ * @param opts - Optional configuration options for the multiselect prompt.
+ * @param defaultValues - Optional array of default selected values.
  */
-export async function promptAuthorInputs(
-	project: PromptAnswers["project"],
-): Promise<PromptAnswers["author"]> {
-	const gitName = await getGitUsername();
-	const inferredGitEmail = await getGitEmail();
+export async function multiselectInput(
+	message: string,
+	opts: Omit<MultiSelectOptions, "type"> = { options: [] },
+	defaultValues?: string[],
+): Promise<string[]> {
+	const values = await consola.prompt(message, {
+		type: "multiselect",
+		initial: defaultValues,
+		cancel: "symbol",
+		...opts,
+	});
 
-	const suggestedUsername = gitName
-		? gitName.toLowerCase().replace(/\s+/g, "")
-		: undefined;
+	handleCancel(values);
 
-	// Author name
-	const authorName = await cli.textInput(
-		"What's your name?",
-		undefined,
-		gitName,
-	);
-
-	// Author email
-	const gitEmail = await cli.textInput(
-		"What's your email?",
-		undefined,
-		inferredGitEmail,
-	);
-
-	// GitHub username
-	const githubUsername = await cli.textInput(
-		"What's your GitHub username?",
-		undefined,
-		suggestedUsername,
-	);
-
-	// NPM username
-	let npmUsername: string | undefined;
-	if (project.shouldReleaseToNPM) {
-		npmUsername = await cli.textInput(
-			"What's your NPM username?",
-			undefined,
-			suggestedUsername,
-		);
-	}
-
-	return {
-		name: authorName,
-		gitUsername: githubUsername,
-		gitEmail: gitEmail,
-		npmUsername: npmUsername,
-	};
+	return values as string[];
 }
+
+/** Prompt for a boolean confirmation (yes/no).
+ * @param message - The prompt message to display.
+ * @param opts - Optional configuration options for the confirm prompt.
+ * @param defaultValue - Optional default boolean value.
+ */
+export async function confirmInput(
+	message: string,
+	opts: Omit<ConfirmPromptOptions, "type"> = {},
+	defaultValue?: boolean,
+): Promise<boolean> {
+	const res = await consola.prompt(message, {
+		type: "confirm",
+		initial: defaultValue,
+		cancel: "symbol",
+		...opts,
+	});
+
+	handleCancel(res);
+
+	return Boolean(res);
+}
+
+const prompts = {
+	textInput,
+	selectInput,
+	multiselectInput,
+	confirmInput,
+};
+
+export default prompts;
