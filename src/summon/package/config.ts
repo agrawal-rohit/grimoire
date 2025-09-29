@@ -1,11 +1,13 @@
 import prompts from "../../cli/prompts";
+import tasks from "../../cli/tasks";
+import { IS_LOCAL_MODE } from "../../core/constants";
 import { getGitEmail, getGitUsername } from "../../core/git";
 import {
 	LANGUAGE_PACKAGE_REGISTRY,
 	validatePackageName,
 } from "../../core/pkg-manager";
+import { listAvailableTemplates } from "../../core/template-registry";
 import { capitalizeFirstLetter } from "../../core/utils";
-import { assertSupportedTemplate, listPackageTemplates } from "./registry";
 
 /** Supported programming languages for the package. */
 export enum Language {
@@ -130,7 +132,23 @@ export async function getPackageTemplate(
 	language: Language,
 	cliFlags: Partial<SummonPackageConfiguration> = {},
 ): Promise<SummonPackageConfiguration["template"]> {
-	const candidateTemplates = await listPackageTemplates(language);
+	let candidateTemplates: string[] = [];
+
+	// If it's not running with local mode, then show a loading spinner until the templates are fetched from Github
+	if (!IS_LOCAL_MODE) {
+		console.log();
+		await tasks.runWithTasks(
+			"Checking available package templates",
+			async () => {
+				candidateTemplates = await listAvailableTemplates(language, "package");
+			},
+		);
+	}
+
+	// In local mode, the templates are fetched from the file system which is a pretty quick operation
+	else {
+		candidateTemplates = await listAvailableTemplates(language, "package");
+	}
 
 	if (!candidateTemplates || candidateTemplates.length === 0)
 		throw new Error(`No templates found for language: ${language}`);
@@ -141,7 +159,7 @@ export async function getPackageTemplate(
 	}));
 
 	let template = cliFlags.template;
-	if (templateOptions.length < 2) template = templateOptions[0].value;
+	if (templateOptions.length === 1) template = templateOptions[0].value;
 	if (!template)
 		template = await prompts.selectInput<string>(
 			"Which starter template would you like to use?",
@@ -149,7 +167,8 @@ export async function getPackageTemplate(
 			candidateTemplates[0],
 		);
 
-	await assertSupportedTemplate(language, template, "package");
+	if (!candidateTemplates.includes(template))
+		throw new Error(`Unsupported template: ${template}`);
 
 	return template;
 }

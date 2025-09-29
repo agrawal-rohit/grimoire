@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { downloadTemplate } from "giget";
+import { IS_LOCAL_MODE } from "./constants";
 import { isDirAsync } from "./fs";
 
 /** Name of the shared templates directory that may be filtered out from listings. */
@@ -12,12 +13,6 @@ const DEFAULT_GITHUB_OWNER = "agrawal-rohit";
 
 /** Default GitHub repository to fetch templates from in remote mode. */
 const DEFAULT_GITHUB_REPO = "grimoire";
-
-/** Base URL for the GitHub API (v3). */
-const GITHUB_API_BASE = "https://api.github.com";
-
-/** When set to "true", use local templates from ./templates; otherwise, fetch from GitHub. */
-const IS_LOCAL_MODE = process.env.GRIMOIRE_LOCAL_TEMPLATES === "true";
 
 /** HTTP headers used when communicating with the GitHub API. */
 const GITHUB_HEADERS = {
@@ -38,14 +33,14 @@ async function getLocalTemplatesRoot(): Promise<string | null> {
 }
 
 /**
- * Resolves the absolute path to the local templates subdirectory for a given language and optional item.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
- * @returns The path to the language subdirectory or item directory if it exists; otherwise null.
+ * Resolves the absolute path to the local templates subdirectory for a given language and resource.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
+ * @returns The path to the language subdirectory or resource directory if it exists; otherwise null.
  */
 async function getLocalTemplatesSubdir(
 	language: string,
-	item?: string,
+	resource?: string,
 ): Promise<string | null> {
 	const root = await getLocalTemplatesRoot();
 	if (!root) return null;
@@ -53,9 +48,9 @@ async function getLocalTemplatesSubdir(
 	const langRoot = path.join(root, language);
 	if (!(await isDirAsync(langRoot))) return null;
 
-	if (item) {
-		const itemDir = path.join(langRoot, item);
-		if (await isDirAsync(itemDir)) return itemDir;
+	if (resource) {
+		const resourceDir = path.join(langRoot, resource);
+		if (await isDirAsync(resourceDir)) return resourceDir;
 		return null;
 	}
 
@@ -64,57 +59,53 @@ async function getLocalTemplatesSubdir(
 
 /**
  * @param dir The directory to list child directories from.
- * @param includeShared Whether to include the shared directory in the results.
  * @returns An array of child directory names, excluding shared if not included.
  */
-async function listChildDirs(
-	dir: string,
-	includeShared: boolean,
-): Promise<string[]> {
+async function listChildDirs(dir: string): Promise<string[]> {
 	if (!(await isDirAsync(dir))) return [];
 	const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-	let names = entries.filter((e) => e.isDirectory()).map((e) => e.name);
-
-	if (!includeShared)
-		names = names.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
+	const names = entries
+		.filter((e) => e.isDirectory())
+		.map((e) => e.name)
+		.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
 
 	return names;
 }
 
 /**
  * Build a GitHub API Contents URL for a templates subtree.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns The constructed API URL.
  */
-function buildContentsURL(language: string, item?: string): string {
-	const subpath = ["templates", language, item].filter(Boolean).join("/");
-	return `${GITHUB_API_BASE}/repos/${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}/contents/${subpath}`;
+function buildContentsURL(language: string, resource?: string): string {
+	const subpath = ["templates", language, resource].filter(Boolean).join("/");
+	return `https://api.github.com/repos/${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}/contents/${subpath}?ref=next`;
 }
 
 /**
  * Build a giget specification for a subtree within the default repo.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns The constructed giget spec string.
  */
-function buildGigetSpec(language: string, item?: string): string {
-	const subpath = ["templates", language, item].filter(Boolean).join("/");
+function buildGigetSpec(language: string, resource?: string): string {
+	const subpath = ["templates", language, resource].filter(Boolean).join("/");
 	return `github:${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}/${subpath}`;
 }
 
 /**
  * Check whether a remote templates subtree exists in GitHub.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns True if the subtree exists or is uncertain, false if definitely not.
  */
 async function subtreeExistsRemote(
 	language: string,
-	item?: string,
+	resource?: string,
 ): Promise<boolean> {
 	try {
-		const url = buildContentsURL(language, item);
+		const url = buildContentsURL(language, resource);
 		const res = await fetch(url, { headers: GITHUB_HEADERS });
 		if (res.status === 404) return false; // definitely not there
 		if (!res.ok) return true; // uncertain; assume exists and let giget verify
@@ -129,21 +120,21 @@ async function subtreeExistsRemote(
 
 /**
  * Attempt to normalize the downloaded directory to the expected subtree.
- * @param downloadedDir The path to the downloaded directory.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * @param downloadedDir - The path to the downloaded directory.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns The normalized directory path.
  */
 async function normalizeDownloadedDir(
 	downloadedDir: string,
 	language: string,
-	item?: string,
+	resource?: string,
 ): Promise<string> {
-	const candidates: string[] = item
+	const candidates: string[] = resource
 		? [
-				path.join(downloadedDir, "templates", language, item),
-				path.join(downloadedDir, language, item),
-				path.join(downloadedDir, item),
+				path.join(downloadedDir, "templates", language, resource),
+				path.join(downloadedDir, language, resource),
+				path.join(downloadedDir, resource),
 				downloadedDir,
 			]
 		: [
@@ -161,19 +152,18 @@ async function normalizeDownloadedDir(
 // Remote caches
 const remotePathCache = new Map<string, string>();
 const remotePathInFlight = new Map<string, Promise<string>>();
-const remoteListCache = new Map<string, string[]>();
 
 /**
  * Download a remote templates subtree to a temporary directory and return the normalized path.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns The path to the downloaded and normalized directory.
  */
 async function downloadRemoteTemplatesSubdir(
 	language: string,
-	item?: string,
+	resource?: string,
 ): Promise<string> {
-	const spec = buildGigetSpec(language, item);
+	const spec = buildGigetSpec(language, resource);
 
 	// Cache hit
 	if (remotePathCache.has(spec)) return remotePathCache.get(spec) as string;
@@ -183,10 +173,10 @@ async function downloadRemoteTemplatesSubdir(
 		return remotePathInFlight.get(spec) as Promise<string>;
 
 	const promise = (async () => {
-		const exists = await subtreeExistsRemote(language, item);
+		const exists = await subtreeExistsRemote(language, resource);
 		if (!exists) {
 			throw new Error(
-				`Remote templates path does not exist: templates/${language}${item ? `/${item}` : ""} (repo: ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}).`,
+				`Remote templates path does not exist: templates/${language}${resource ? `/${resource}` : ""} (repo: ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}).`,
 			);
 		}
 
@@ -196,7 +186,11 @@ async function downloadRemoteTemplatesSubdir(
 
 		try {
 			const res = await downloadTemplate(spec, { dir: tmpRoot, force: true });
-			const normalized = await normalizeDownloadedDir(res.dir, language, item);
+			const normalized = await normalizeDownloadedDir(
+				res.dir,
+				language,
+				resource,
+			);
 			remotePathCache.set(spec, normalized);
 			return normalized;
 		} catch (e) {
@@ -216,38 +210,29 @@ async function downloadRemoteTemplatesSubdir(
 
 /**
  * List child directories from the GitHub Contents API without downloading the subtree.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
- * @param includeShared Whether to include the shared directory in the results.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns An array of child directory names or null if unable to fetch.
  */
 async function listRemoteChildDirsViaAPI(
 	language: string,
-	item: string | undefined,
-	includeShared: boolean,
+	resource?: string,
 ): Promise<string[] | null> {
-	const cacheKey = `${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}:templates/${language}${item ? `/${item}` : ""}:shared=${includeShared}`;
-	if (remoteListCache.has(cacheKey))
-		return remoteListCache.get(cacheKey) as string[];
-
 	try {
-		const url = buildContentsURL(language, item);
+		const url = buildContentsURL(language, resource);
 		const res = await fetch(url, { headers: GITHUB_HEADERS });
 		if (!res.ok) return null;
 		const data = await res.json();
 		if (!Array.isArray(data)) return null;
 
-		let names = data
+		const names = data
 			.filter(
 				(entry) =>
 					entry && entry.type === "dir" && typeof entry.name === "string",
 			)
-			.map((entry) => entry.name as string);
+			.map((entry) => entry.name as string)
+			.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
 
-		if (!includeShared)
-			names = names.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
-
-		remoteListCache.set(cacheKey, names);
 		return names;
 	} catch {
 		return null;
@@ -255,68 +240,60 @@ async function listRemoteChildDirsViaAPI(
 }
 
 /**
- * Resolve the on-disk directory that contains templates for a given language and item.
- * @param language The programming language for the templates.
- * @param item Optional item within the language.
+ * Resolve the on-disk directory that contains templates for a given language and resource.
+ * @param language - The programming language for the templates.
+ * @param resource - Optional resource within the language.
  * @returns An object with the path and source of the templates directory.
  */
 export async function resolveTemplatesDir(
 	language: string,
-	item?: string,
+	resource?: string,
 ): Promise<{ path: string; source: TemplateSource }> {
 	if (IS_LOCAL_MODE) {
-		const localDir = await getLocalTemplatesSubdir(language, item);
+		const localDir = await getLocalTemplatesSubdir(language, resource);
 		if (localDir) return { path: localDir, source: "local" };
 
 		const root = (await getLocalTemplatesRoot()) || "<no local templates root>";
 		throw new Error(
-			`Local templates not found at ${root} for language "${language}"${item ? ` and item "${item}"` : ""}.`,
+			`Local templates not found at ${root} for language "${language}"${resource ? ` and resource "${resource}"` : ""}.`,
 		);
 	}
 
 	// Remote mode
-	const remoteDir = await downloadRemoteTemplatesSubdir(language, item);
+	const remoteDir = await downloadRemoteTemplatesSubdir(language, resource);
 	if (await isDirAsync(remoteDir)) {
 		return { path: remoteDir, source: "remote" };
 	}
 
 	throw new Error(
-		`No remote templates found for language "${language}"${item ? ` and item "${item}"` : ""} in ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}.`,
+		`No remote templates found for language "${language}"${resource ? ` and resource "${resource}"` : ""} in ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}.`,
 	);
 }
 
 /**
- * List available template names (subdirectories) for a given language and item.
- * @param language The programming language for the templates.
- * @param item The item type, defaults to "package".
- * @param options Options for listing, including whether to include shared.
+ * List available template names (subdirectories) for a given language and resource.
+ * @param language - The programming language for the templates.
+ * @param resource - The resource type, defaults to "package".
  * @returns An array of available template names.
  */
 export async function listAvailableTemplates(
 	language: string,
-	item: string = "package",
-	options: { includeShared?: boolean } = {},
+	resource: string,
 ): Promise<string[]> {
-	const includeShared = Boolean(options.includeShared);
-
 	if (IS_LOCAL_MODE) {
-		const localDir = await getLocalTemplatesSubdir(language, item);
-		if (!localDir) return [];
-		return listChildDirs(localDir, includeShared);
+		const resourceDir = await getLocalTemplatesSubdir(language, resource);
+		if (!resourceDir) return [];
+		return listChildDirs(resourceDir);
 	}
 
 	// Prefer API listing
-	const apiNames = await listRemoteChildDirsViaAPI(
-		language,
-		item,
-		includeShared,
-	);
+	const apiNames = await listRemoteChildDirsViaAPI(language, resource);
 	if (apiNames && apiNames.length > 0) return apiNames;
 
 	// Download subtree and list locally
 	try {
-		const dir = await downloadRemoteTemplatesSubdir(language, item);
-		const names = await listChildDirs(dir, includeShared);
+		const dir = await downloadRemoteTemplatesSubdir(language, resource);
+		const names = await listChildDirs(dir);
 		return names;
 	} catch {
 		return [];

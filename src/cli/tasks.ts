@@ -52,7 +52,10 @@ export async function runWithTasks(
 						typeof SimpleRenderer
 					>,
 				) => {
-					if (task) return task;
+					if (task) {
+						await task();
+						return;
+					}
 
 					const subTasks = subtasks.map(({ title, task: run }) => ({
 						title: chalk.grey(title),

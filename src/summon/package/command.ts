@@ -33,9 +33,9 @@ export async function runSummonPackage(
 		public: options.public,
 	});
 
+	let packageManagerVersion = "";
 	const packageManager: PackageManager =
 		LANGUAGE_PACKAGE_MANAGER[summonConfig.lang];
-	let packageManagerVersion = "";
 	const resolvedTargetDir = path.resolve(process.cwd(), summonConfig.name);
 
 	// Preflight checks
