@@ -2,8 +2,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { downloadTemplate } from "giget";
+import type { Language } from "../summon/package/config";
 import { IS_LOCAL_MODE } from "./constants";
-import { isDirAsync } from "./fs";
+import { copyDirSafeAsync, isDirAsync } from "./fs";
 
 /** Name of the shared templates directory that may be filtered out from listings. */
 const SHARED_DIR_NAME = "shared";
@@ -149,10 +150,6 @@ async function normalizeDownloadedDir(
 	return downloadedDir;
 }
 
-// Remote caches
-const remotePathCache = new Map<string, string>();
-const remotePathInFlight = new Map<string, Promise<string>>();
-
 /**
  * Download a remote templates subtree to a temporary directory and return the normalized path.
  * @param language - The programming language for the templates.
@@ -164,13 +161,6 @@ async function downloadRemoteTemplatesSubdir(
 	resource?: string,
 ): Promise<string> {
 	const spec = buildGigetSpec(language, resource);
-
-	// Cache hit
-	if (remotePathCache.has(spec)) return remotePathCache.get(spec) as string;
-
-	// Coalesce concurrent downloads
-	if (remotePathInFlight.has(spec))
-		return remotePathInFlight.get(spec) as Promise<string>;
 
 	const promise = (async () => {
 		const exists = await subtreeExistsRemote(language, resource);
@@ -191,7 +181,6 @@ async function downloadRemoteTemplatesSubdir(
 				language,
 				resource,
 			);
-			remotePathCache.set(spec, normalized);
 			return normalized;
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
@@ -199,12 +188,9 @@ async function downloadRemoteTemplatesSubdir(
 				`Failed to download templates from "${spec}". ${msg}. ` +
 					`Ensure the path exists and that network/GitHub access are available.`,
 			);
-		} finally {
-			remotePathInFlight.delete(spec);
 		}
 	})();
 
-	remotePathInFlight.set(spec, promise);
 	return promise;
 }
 
@@ -212,31 +198,34 @@ async function downloadRemoteTemplatesSubdir(
  * List child directories from the GitHub Contents API without downloading the subtree.
  * @param language - The programming language for the templates.
  * @param resource - Optional resource within the language.
- * @returns An array of child directory names or null if unable to fetch.
+ * @returns An array of child directory names.
  */
 async function listRemoteChildDirsViaAPI(
 	language: string,
 	resource?: string,
-): Promise<string[] | null> {
-	try {
-		const url = buildContentsURL(language, resource);
-		const res = await fetch(url, { headers: GITHUB_HEADERS });
-		if (!res.ok) return null;
-		const data = await res.json();
-		if (!Array.isArray(data)) return null;
+): Promise<string[]> {
+	const url = buildContentsURL(language, resource);
+	const res = await fetch(url, { headers: GITHUB_HEADERS });
+	if (!res.ok)
+		throw new Error(
+			`Failed to fetch from GitHub API: ${res.status} ${res.statusText}`,
+		);
 
-		const names = data
-			.filter(
-				(entry) =>
-					entry && entry.type === "dir" && typeof entry.name === "string",
-			)
-			.map((entry) => entry.name as string)
-			.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
+	const data = await res.json();
+	if (!Array.isArray(data))
+		throw new Error(
+			"Invalid response from GitHub API: expected array of contents",
+		);
 
-		return names;
-	} catch {
-		return null;
-	}
+	const names = data
+		.filter(
+			(entry) =>
+				entry && entry.type === "dir" && typeof entry.name === "string",
+		)
+		.map((entry) => entry.name as string)
+		.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
+
+	return names;
 }
 
 /**
@@ -248,10 +237,10 @@ async function listRemoteChildDirsViaAPI(
 export async function resolveTemplatesDir(
 	language: string,
 	resource?: string,
-): Promise<{ path: string; source: TemplateSource }> {
+): Promise<string> {
 	if (IS_LOCAL_MODE) {
 		const localDir = await getLocalTemplatesSubdir(language, resource);
-		if (localDir) return { path: localDir, source: "local" };
+		if (localDir) return localDir;
 
 		const root = (await getLocalTemplatesRoot()) || "<no local templates root>";
 		throw new Error(
@@ -261,9 +250,7 @@ export async function resolveTemplatesDir(
 
 	// Remote mode
 	const remoteDir = await downloadRemoteTemplatesSubdir(language, resource);
-	if (await isDirAsync(remoteDir)) {
-		return { path: remoteDir, source: "remote" };
-	}
+	if (await isDirAsync(remoteDir)) return remoteDir;
 
 	throw new Error(
 		`No remote templates found for language "${language}"${resource ? ` and resource "${resource}"` : ""} in ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}.`,
@@ -273,11 +260,11 @@ export async function resolveTemplatesDir(
 /**
  * List available template names (subdirectories) for a given language and resource.
  * @param language - The programming language for the templates.
- * @param resource - The resource type, defaults to "package".
+ * @param resource - The resource type
  * @returns An array of available template names.
  */
 export async function listAvailableTemplates(
-	language: string,
+	language: Language,
 	resource: string,
 ): Promise<string[]> {
 	if (IS_LOCAL_MODE) {
@@ -288,14 +275,49 @@ export async function listAvailableTemplates(
 
 	// Prefer API listing
 	const apiNames = await listRemoteChildDirsViaAPI(language, resource);
-	if (apiNames && apiNames.length > 0) return apiNames;
+	return apiNames;
+}
 
-	// Download subtree and list locally
+/**
+ * Write the chosen template files for a resource into the target directory.
+ * @param targetDir - Package root directory to write into.
+ * @param language - The programming language for the templates.
+ * @param resource - The resource type.
+ * @param template - The name of the specific template to use.
+ * @returns A promise that resolves when the template files have been written.
+ */
+export async function writeTemplateFiles(
+	targetDir: string,
+	language: string,
+	resource: string,
+	template: string,
+): Promise<void> {
+	// Global shared: templates/shared
 	try {
-		const dir = await downloadRemoteTemplatesSubdir(language, resource);
-		const names = await listChildDirs(dir);
-		return names;
-	} catch {
-		return [];
-	}
+		const globalShared = await resolveTemplatesDir("shared");
+		await copyDirSafeAsync(globalShared, targetDir);
+	} catch {}
+
+	// Language shared: templates/<lang>/shared
+	try {
+		const langShared = await resolveTemplatesDir(language, "shared");
+		await copyDirSafeAsync(langShared, targetDir);
+	} catch {}
+
+	// Item-specific shared: templates/<lang>/package/shared
+	try {
+		const itemShared = await resolveTemplatesDir(
+			language,
+			`${resource}/shared`,
+		);
+		await copyDirSafeAsync(itemShared, targetDir);
+	} catch {}
+
+	// Item-specific template: templates/<lang>/package/<template>
+	const chosenTemplateDir = await resolveTemplatesDir(
+		language,
+		`${resource}/${template}`,
+	);
+
+	await copyDirSafeAsync(chosenTemplateDir, targetDir);
 }

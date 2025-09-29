@@ -1,10 +1,5 @@
 import path from "node:path";
-import {
-	copyDirSafeAsync,
-	ensureDirAsync,
-	writeFileAsync,
-} from "../../core/fs";
-import { resolveTemplatesDir } from "../../core/template-registry";
+import { ensureDirAsync, writeFileAsync } from "../../core/fs";
 import { toSlug } from "../../core/utils";
 import type { SummonPackageConfiguration } from "./config";
 
@@ -79,50 +74,4 @@ export async function writePackageJson(
 		JSON.stringify(pkgJson, undefined, 2),
 	);
 	return pkgJson;
-}
-
-/**
- * Write a minimal starter template for the package (src/ and tests/).
- * @param targetDir - Package root directory to write into.
- */
-export async function writeStarterTemplate(
-	targetDir: string,
-	summonConfig: SummonPackageConfiguration,
-): Promise<void> {
-	const { lang, template } = summonConfig;
-
-	// Global shared: templates/shared
-	try {
-		const { path: globalShared } = await resolveTemplatesDir("shared");
-		await copyDirSafeAsync(globalShared, targetDir);
-	} catch {
-		// No global shared available - ignore
-	}
-
-	// Language shared: templates/<lang>/shared
-	try {
-		const { path: langShared } = await resolveTemplatesDir(lang, "shared");
-		await copyDirSafeAsync(langShared, targetDir);
-	} catch {
-		// No language shared available - ignore
-	}
-
-	// Item-specific shared: templates/<lang>/package/shared
-	try {
-		const { path: itemShared } = await resolveTemplatesDir(
-			lang,
-			"package/shared",
-		);
-		await copyDirSafeAsync(itemShared, targetDir);
-	} catch {
-		// No item shared available - ignore
-	}
-
-	// Item-specific template: templates/<lang>/package/<template>
-	const { path: chosenTemplateDir } = await resolveTemplatesDir(
-		lang,
-		`package/${template}`,
-	);
-
-	await copyDirSafeAsync(chosenTemplateDir, targetDir);
 }

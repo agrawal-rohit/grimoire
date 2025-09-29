@@ -9,15 +9,12 @@ import {
 	LANGUAGE_PACKAGE_MANAGER,
 	type PackageManager,
 } from "../../core/pkg-manager";
+import { writeTemplateFiles } from "../../core/template-registry";
 import {
 	getSummonPackageConfiguration,
 	type SummonPackageConfiguration,
 } from "./config";
-import {
-	createPackageDirectory,
-	writePackageJson,
-	writeStarterTemplate,
-} from "./setup";
+import { createPackageDirectory, writePackageJson } from "./setup";
 
 /** Entry point for "grimoire summon package".*/
 export async function runSummonPackage(
@@ -72,13 +69,18 @@ export async function runSummonPackage(
 			},
 		},
 		{
-			title: "Add starter template",
+			title: "Add template files",
 			task: async () => {
-				await writeStarterTemplate(targetDir, summonConfig);
+				await writeTemplateFiles(
+					targetDir,
+					summonConfig.lang,
+					"package",
+					summonConfig.template,
+				);
 			},
 		},
 		{
-			title: "Create package manifest",
+			title: "Update package.json",
 			task: async () => {
 				await writePackageJson(targetDir, summonConfig, packageManagerVersion);
 			},

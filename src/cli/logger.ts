@@ -15,7 +15,7 @@ export class Logger {
 	 * Prints an error message with a red background prefix and exits the process with code 1.
 	 * @param message - The error message to display.
 	 */
-	error(message: string): never {
+	error(message: string) {
 		console.log();
 		console.error(`${chalk.bgRed(" error ")} ${message}`);
 		console.log();
@@ -26,7 +26,7 @@ export class Logger {
 	 * Prints an end message with a red background prefix and exits the process with code 0.
 	 * @param message - The end message to display.
 	 */
-	end(message: string): never {
+	end(message: string) {
 		console.log();
 		console.error(`${chalk.bgRed(" end ")} ${message}`);
 		console.log();

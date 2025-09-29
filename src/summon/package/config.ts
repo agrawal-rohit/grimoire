@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import prompts from "../../cli/prompts";
 import tasks from "../../cli/tasks";
 import { IS_LOCAL_MODE } from "../../core/constants";
@@ -159,7 +160,17 @@ export async function getPackageTemplate(
 	}));
 
 	let template = cliFlags.template;
-	if (templateOptions.length === 1) template = templateOptions[0].value;
+
+	// If only a single template is available, just use that
+	if (templateOptions.length === 1) {
+		template = templateOptions[0].value;
+		console.log(
+			chalk.cyan(
+				`(Only one package template is available, using "${template}".)`,
+			),
+		);
+	}
+
 	if (!template)
 		template = await prompts.selectInput<string>(
 			"Which starter template would you like to use?",
