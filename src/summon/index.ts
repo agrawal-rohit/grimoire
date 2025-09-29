@@ -1,104 +1,50 @@
-import fs from "node:fs";
-import path from "node:path";
+import type { CAC } from "cac";
 import logger from "../cli/logger";
-import tasks from "../cli/tasks";
-import { initGitRepo } from "../core/git";
-import {
-	ensurePackageManager,
-	installAllDependencies,
-	LANGUAGE_PACKAGE_MANAGER,
-	type PackageManager,
-} from "../core/pkg-manager";
-import {
-	getSummonPackageConfiguration,
-	type SummonPackageConfiguration,
-} from "./package/config";
-import {
-	createPackageDirectory,
-	writePackageJson,
-	writeStarterTemplate,
-} from "./package/setup";
+import runSummonPackage from "./package/command";
+import type { SummonPackageConfiguration } from "./package/config";
 
-/** Entry point for "grimoire summon package".*/
-export async function runSummonPackage(
-	options: Partial<SummonPackageConfiguration> = {},
-): Promise<void> {
-	await logger.intro("starting summoning...");
+export async function registerSummonCli(app: CAC) {
+	// Top-level description
+	app.usage("summon <resource> [options]");
 
-	// Gather configuration (skip prompts when options are provided)
-	const summonConfig = await getSummonPackageConfiguration({
-		lang: options.lang,
-		name: options.name,
-		template: options.template,
-		public: options.public,
-	});
+	// Summon command with resource routing
+	app
+		.command("summon [resource]", "Summon a resource")
+		.option("--name <name>", "Package name")
+		.option("--lang <lang>", "Target language (e.g., typescript)")
+		.option(
+			"--public",
+			"Public package (will setup for publishing to a package registry)",
+		)
+		.option("--template <template>", "Starter template for the package")
+		.action(
+			async (
+				resource: string | undefined,
+				options: Partial<SummonPackageConfiguration>,
+			) => {
+				try {
+					switch (resource) {
+						// Summon a package
+						case "package": {
+							await runSummonPackage({
+								lang: options.lang,
+								name: options.name,
+								template: options.template,
+								public: options.public ? Boolean(options.public) : undefined,
+							});
+							break;
+						}
 
-	// Determine the package manager for the chosen language
-	const packageManager: PackageManager =
-		LANGUAGE_PACKAGE_MANAGER[summonConfig.lang];
-
-	// State shared across tasks
-	let packageManagerVersion = "";
-	const resolvedTargetDir = path.resolve(process.cwd(), summonConfig.name);
-
-	// 1) Preflight checks: checking the target directory and the package manager
-	console.log();
-	await tasks.runWithTasks("Preflight checks", async () => {
-		// Check target directory
-		let isEmpty = true;
-		if (fs.existsSync(resolvedTargetDir)) {
-			try {
-				const files = fs.readdirSync(resolvedTargetDir);
-				isEmpty = files.length === 0;
-			} catch {
-				isEmpty = true;
-			}
-		}
-		if (!isEmpty) {
-			throw new Error(`Target directory is not empty: ${resolvedTargetDir}`);
-		}
-
-		// Check package manager availability
-		packageManagerVersion = await ensurePackageManager(packageManager);
-	});
-
-	// 2) Create the package
-	let targetDir = "";
-	await tasks.runWithTasks("Preparing package", undefined, [
-		{
-			title: "Create package directory",
-			task: async () => {
-				targetDir = await createPackageDirectory(
-					process.cwd(),
-					summonConfig.name,
-				);
+						default: {
+							console.log("Usage: grimoire summon <resource>\n");
+							console.log("Available resources:");
+							console.log("  package   Create a new package");
+						}
+					}
+				} catch (err) {
+					const msg = err instanceof Error ? err.message : String(err);
+					logger.error(msg);
+				}
 			},
-		},
-		{
-			title: "Add starter template",
-			task: async () => {
-				await writeStarterTemplate(targetDir, summonConfig);
-			},
-		},
-		{
-			title: "Create package manifest",
-			task: async () => {
-				await writePackageJson(targetDir, summonConfig, packageManagerVersion);
-			},
-		},
-		{
-			title: "Install dependencies",
-			task: async () => {
-				await installAllDependencies(targetDir, packageManager);
-			},
-		},
-		{
-			title: "Initialize git with initial commit",
-			task: async () => {
-				await initGitRepo(targetDir);
-			},
-		},
-	]);
+		);
 }
-
-export default runSummonPackage;
