@@ -112,7 +112,12 @@ async function subtreeExistsRemote(
 		if (!res.ok) return true; // uncertain; assume exists and let giget verify
 		const data = await res.json();
 		if (Array.isArray(data)) return true;
-		if (data && typeof data === "object" && data.type === "dir") return true;
+		if (
+			data &&
+			typeof data === "object" &&
+			(data as Record<string, unknown>).type === "dir"
+		)
+			return true;
 		return false;
 	} catch {
 		return true;

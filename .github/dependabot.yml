@@ -34,8 +34,7 @@ updates:
       prefix: "ci"
       include: scope
 
-  # npm (pnpm) dependency updates flow into next (development)
-  # Security updates are enabled; Dependabot will open security PRs against the default branch (main)
+  # pnpm dependency updates flow into next (development)
   - package-ecosystem: npm
     directory: /
     target-branch: next
@@ -53,7 +52,6 @@ updates:
       - pnpm
     security-updates: true
     commit-message:
-      # Conventional Commits aligned with semantic-release
       prefix: "fix" # for production/runtime deps
       prefix-development: "chore" # for dev-only deps
       include: scope
@@ -77,6 +75,10 @@ updates:
           - "jest"
           - "@types/jest"
           - "ts-jest"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       commitlint-husky:
         patterns:
           - "@commitlint/*"

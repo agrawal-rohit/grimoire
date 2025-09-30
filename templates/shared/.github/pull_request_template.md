@@ -4,15 +4,6 @@
 
 [Provide a concise description of the bug and the fix.]
 
-## Type of Change
-
-- [ ] New feature
-- [ ] Bug fix
-- [ ] Documentation update
-- [ ] Refactoring
-- [ ] Hotfix
-- [ ] Security patch
-
 ## Description
 
 [Provide a detailed explanation of the changes you have made. Include the reasons behind these changes and any relevant context. Link any related issues.]

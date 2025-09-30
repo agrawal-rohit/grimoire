@@ -1,5 +1,7 @@
 # NPM Library Template
 
+<img alt="Made with Grimoire" src="https://img.shields.io/badge/made_with-grimoire-6d3f7c">
+
 This template is designed to get you setup with best practices and integrated tools for your new NPM library, so you can just focus on shipping some awesome code!
 
 # TO DO
