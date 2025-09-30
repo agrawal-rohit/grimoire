@@ -50,7 +50,6 @@ updates:
       - dependencies
       - node
       - pnpm
-    security-updates: true
     commit-message:
       prefix: "fix" # for production/runtime deps
       prefix-development: "chore" # for dev-only deps
