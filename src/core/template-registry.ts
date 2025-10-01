@@ -4,7 +4,7 @@ import path from "node:path";
 import { downloadTemplate } from "giget";
 import type { Language } from "../summon/package/config";
 import { IS_LOCAL_MODE } from "./constants";
-import { copyDirSafeAsync, isDirAsync } from "./fs";
+import { isDirAsync } from "./fs";
 
 /** Name of the shared templates directory that may be filtered out from listings. */
 const SHARED_DIR_NAME = "shared";
@@ -281,48 +281,4 @@ export async function listAvailableTemplates(
 	// Prefer API listing
 	const apiNames = await listRemoteChildDirsViaAPI(language, resource);
 	return apiNames;
-}
-
-/**
- * Write the chosen template files for a resource into the target directory.
- * @param targetDir - Package root directory to write into.
- * @param language - The programming language for the templates.
- * @param resource - The resource type.
- * @param template - The name of the specific template to use.
- * @returns A promise that resolves when the template files have been written.
- */
-export async function writeTemplateFiles(
-	targetDir: string,
-	language: string,
-	resource: string,
-	template: string,
-): Promise<void> {
-	// Global shared: templates/shared
-	try {
-		const globalShared = await resolveTemplatesDir("shared");
-		await copyDirSafeAsync(globalShared, targetDir);
-	} catch {}
-
-	// Language shared: templates/<lang>/shared
-	try {
-		const langShared = await resolveTemplatesDir(language, "shared");
-		await copyDirSafeAsync(langShared, targetDir);
-	} catch {}
-
-	// Item-specific shared: templates/<lang>/package/shared
-	try {
-		const itemShared = await resolveTemplatesDir(
-			language,
-			`${resource}/shared`,
-		);
-		await copyDirSafeAsync(itemShared, targetDir);
-	} catch {}
-
-	// Item-specific template: templates/<lang>/package/<template>
-	const chosenTemplateDir = await resolveTemplatesDir(
-		language,
-		`${resource}/${template}`,
-	);
-
-	await copyDirSafeAsync(chosenTemplateDir, targetDir);
 }

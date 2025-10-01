@@ -59,21 +59,9 @@ updates:
         dependency-type: production
       dev-deps:
         dependency-type: development
-      eslint:
-        patterns:
-          - "eslint"
-          - "@eslint/*"
-          - "eslint-*"
-          - "@typescript-eslint/*"
       typescript:
         patterns:
           - "typescript"
-          - "ts-jest"
-      jest:
-        patterns:
-          - "jest"
-          - "@types/jest"
-          - "ts-jest"
       vitest:
         patterns:
           - "vitest"

@@ -43,7 +43,7 @@ export async function runWithTasks(
 	const tasks = new Listr(
 		[
 			{
-				title: chalk.cyan(goalTitle),
+				title: chalk.magentaBright(goalTitle),
 				task: async (
 					_ctx: unknown,
 					_task: ListrTaskWrapper<

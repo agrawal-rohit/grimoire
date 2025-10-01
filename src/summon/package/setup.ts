@@ -1,7 +1,16 @@
 import path from "node:path";
-import { ensureDirAsync, writeFileAsync } from "../../core/fs";
-import { toSlug } from "../../core/utils";
+import mitLicense from "spdx-license-list/licenses/MIT.json";
+import {
+	copyDirSafeAsync,
+	ensureDirAsync,
+	removeFilesByBasename,
+	renderMustacheTemplates,
+	writeFileAsync,
+} from "../../core/fs";
+import { resolveTemplatesDir } from "../../core/template-registry";
+
 import type { SummonPackageConfiguration } from "./config";
+import { templatePublicPaths } from "./config";
 
 /**
  * Creates the package directory based on the provided package name.
@@ -26,52 +35,69 @@ export async function createPackageDirectory(
  * @returns The final package.json object that was persisted to disk.
  * @throws If an existing package.json is invalid JSON.
  */
-export async function writePackageJson(
+export async function applyTemplateModifications(
 	targetDir: string,
 	summonConfig: SummonPackageConfiguration,
 	packageManagerVersion: string,
-): Promise<Record<string, unknown>> {
-	const pkgJson: Record<string, unknown> = {
-		name: summonConfig.name,
-		version: "0.0.1",
-		private: true,
-		type: "module",
-		packageManager: packageManagerVersion,
-		main: "./dist/index.js",
-		module: "./dist/index.js",
-		types: "./dist/index.d.ts",
+): Promise<void> {
+	const templateMetadata = {
+		packageManagerVersion,
+		...summonConfig,
 	};
 
-	// Scripts defaults
-	pkgJson.scripts = {
-		test: "jest",
-		lint: "pnpm exec biome lint --write",
-		format: "pnpm exec biome format --write",
-		check: "pnpm exec biome check --write",
-		"test:cov": "jest --coverage --passWithNoTests",
-		start: "tsdown --watch",
-		build: "tsdown",
-		release: summonConfig.public ? "semantic-release" : undefined,
-		prepare: "husky",
-	};
+	await renderMustacheTemplates(targetDir, templateMetadata);
+}
 
-	// If the user opted to release to the package manager, include release-ready config
-	if (summonConfig.public) {
-		let pkgGithubURL = "";
-		if (summonConfig.authorGitUsername)
-			pkgGithubURL = `https://github.com/${toSlug(summonConfig.authorGitUsername)}/${toSlug(summonConfig.name)}`;
+/**
+ * Write the chosen template files for a resource into the target directory.
+ * @param targetDir - Package root directory to write into.
+ * @param summonConfig - Summon configuration describing the new package.
+ * @returns A promise that resolves when the template files have been written.
+ */
+export async function writePackageTemplateFiles(
+	targetDir: string,
+	summonConfig: SummonPackageConfiguration,
+): Promise<void> {
+	// Global shared: templates/shared
+	const globalShared = await resolveTemplatesDir("shared");
+	await copyDirSafeAsync(globalShared, targetDir);
 
-		pkgJson.license = "MIT";
-		pkgJson.private = false;
-		pkgJson.repository = pkgGithubURL;
-		pkgJson.bugs = `${pkgGithubURL}/issues`;
-		pkgJson.homepage = `${pkgGithubURL}#readme`;
-		pkgJson.author = `${summonConfig.authorName} <${summonConfig.authorGitEmail}>`;
+	// Language shared: templates/<lang>/shared
+	const langShared = await resolveTemplatesDir(summonConfig.lang, "shared");
+	await copyDirSafeAsync(langShared, targetDir);
+
+	// Item-specific shared: templates/<lang>/package/shared
+	const itemShared = await resolveTemplatesDir(
+		summonConfig.lang,
+		"package/shared",
+	);
+	await copyDirSafeAsync(itemShared, targetDir);
+
+	// Item-specific template: templates/<lang>/package/<template>
+	const chosenTemplateDir = await resolveTemplatesDir(
+		summonConfig.lang,
+		`package/${summonConfig.template}`,
+	);
+	await copyDirSafeAsync(chosenTemplateDir, targetDir);
+
+	// Remove public files from the targetDir if a private package is requested
+	if (!summonConfig.public) {
+		const publicFiles = [
+			...templatePublicPaths.shared,
+			...(templatePublicPaths[summonConfig.lang] ?? []),
+		];
+
+		await removeFilesByBasename(targetDir, publicFiles);
 	}
 
-	await writeFileAsync(
-		path.join(targetDir, "package.json"),
-		JSON.stringify(pkgJson, undefined, 2),
-	);
-	return pkgJson;
+	// Add MIT license
+	if (summonConfig.authorName) {
+		const year = new Date().getFullYear().toString();
+
+		const licenseText = mitLicense.licenseText
+			.replace("<year>", year)
+			.replace("<copyright holders>", summonConfig.authorName);
+
+		await writeFileAsync(path.join(targetDir, "LICENSE"), licenseText);
+	}
 }

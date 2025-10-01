@@ -8,12 +8,22 @@ import {
 	validatePackageName,
 } from "../../core/pkg-manager";
 import { listAvailableTemplates } from "../../core/template-registry";
-import { capitalizeFirstLetter } from "../../core/utils";
+import { capitalizeFirstLetter, toSlug } from "../../core/utils";
 
 /** Supported programming languages for the package. */
 export enum Language {
 	TYPESCRIPT = "typescript",
 }
+
+export const templatePublicPaths: Record<Language | "shared", string[]> = {
+	shared: [
+		"CODE_OF_CONDUCT.md",
+		"CONTRIBUTING.md",
+		"issue_template",
+		"pull_request_template.md",
+	],
+	[Language.TYPESCRIPT]: ["release.config.cjs"],
+};
 
 /** Describes the configuration for summoning a package. */
 export type SummonPackageConfiguration = {
@@ -123,10 +133,11 @@ export async function getPackageName(
 			{ required: true },
 			"my-package",
 		));
+	const cleanedName = toSlug(name);
 
-	validatePackageName(name, language);
+	validatePackageName(cleanedName, language);
 
-	return name;
+	return cleanedName;
 }
 
 export async function getPackageTemplate(
@@ -165,7 +176,7 @@ export async function getPackageTemplate(
 	if (templateOptions.length === 1) {
 		template = templateOptions[0].value;
 		console.log(
-			chalk.cyan(
+			chalk.magentaBright(
 				`(Only one package template is available, using "${template}".)`,
 			),
 		);
@@ -230,11 +241,13 @@ export async function promptAuthorGitUsername(): Promise<string> {
 		? gitName.toLowerCase().replace(/\s+/g, "")
 		: undefined;
 
-	return await prompts.textInput(
+	const finalGitUserName = await prompts.textInput(
 		"What's your GitHub username?",
 		undefined,
 		suggestedUsername,
 	);
+
+	return toSlug(finalGitUserName);
 }
 
 /** Prompt for author's package registry username (e.g., NPM for TypeScript). */

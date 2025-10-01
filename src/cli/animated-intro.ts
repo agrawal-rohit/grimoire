@@ -57,7 +57,7 @@ export async function animatedIntro(
 	};
 
 	/* ---------------- layout constants ---------------- */
-	const label = chalk.bold(chalk.magenta(`${title}:`));
+	const label = chalk.bold(chalk.magentaBright(`${title}:`));
 	const GAP = "  ";
 	const LEFT_WIDTH = 13;
 	const TOP = "╭─────┬─────╮";

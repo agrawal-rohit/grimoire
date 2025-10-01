@@ -34,7 +34,6 @@
 * [Commands](#commands)
   * [`summon <resource>`](#summon-resource)
     * [`package`](#package)
-* [Contributing](#contributing)
 * [License](#license)
 
 ## Features
@@ -54,7 +53,7 @@
 * Automatically generated community files _(contribution guidelines, issue templates, and pull request checklists)_
 * Version management and package publishing using [semantic release][semantic-release]
 * Sensible [templates][] for common use cases encountered in modern development
-* Gitflow-inspired [branching strategy][#branching-strategy] for preview and production releases
+* Gitflow-inspired [branching strategy](#branching-strategy) for preview and production releases
 
 ## Requirements
 
@@ -64,7 +63,7 @@
 
 ### Installation
 
-The easiest way to run the command is through [npx][]:
+The easiest way to install and use `grimoire` is through [npx][]:
 
 ```bash
 npx grimoire@latest --help
@@ -74,11 +73,14 @@ npx grimoire@latest --help
 
 ### <span id="summon-resource"></span>`summon <resource>`
 
+Summon
+
 #### <span id="package"></span>`package`
 
 ```bash
 npx grimoire@latest --help
 ```
+
 
 ## License
 

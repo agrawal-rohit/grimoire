@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import mustache from "mustache";
 
 /**
  * Check whether a path exists and is a directory.
@@ -83,5 +84,93 @@ export async function copyDirSafeAsync(
 
 		if (entry.isDirectory()) await copyDirSafeAsync(srcPath, destPath);
 		else if (entry.isFile()) await copyFileSafeAsync(srcPath, destPath);
+	}
+}
+
+/**
+ * Recursively remove files or directories in a directory tree that match a predicate.
+ * The predicate is called with: (basename, fullPath, dirent).
+ * Directories that match are deleted (recursively); non-matching directories are traversed.
+ * @param rootDir - Root directory to traverse.
+ * @param predicate - Function returning true when the entry should be removed.
+ */
+export async function removeMatchingFilesRecursively(
+	rootDir: string,
+	predicate: (basename: string, fullPath: string, entry: fs.Dirent) => boolean,
+): Promise<void> {
+	let entries: fs.Dirent[] = [];
+	try {
+		entries = await fs.promises.readdir(rootDir, { withFileTypes: true });
+	} catch {
+		return;
+	}
+
+	for (const entry of entries) {
+		const full = path.join(rootDir, entry.name);
+
+		// If the directory itself matches, remove it entirely; otherwise traverse it.
+		if (entry.isDirectory()) {
+			if (predicate(entry.name, full, entry)) {
+				await fs.promises.rm(full, { recursive: true, force: true });
+				continue;
+			}
+			await removeMatchingFilesRecursively(full, predicate);
+		}
+
+		// If the file matches, remove the file
+		else if (entry.isFile()) {
+			if (predicate(entry.name, full, entry)) {
+				await fs.promises.rm(full, { force: true });
+			}
+		}
+	}
+}
+
+/**
+ * Convenience wrapper to remove any files or directories whose basename is in the provided list,
+ * regardless of which subfolder they are in.
+ * @param rootDir - Root directory to traverse.
+ * @param fileNames - Iterable of basenames to remove.
+ */
+export async function removeFilesByBasename(
+	rootDir: string,
+	fileNames: Iterable<string>,
+): Promise<void> {
+	const set = new Set(fileNames);
+	await removeMatchingFilesRecursively(rootDir, (name) => set.has(name));
+}
+
+/**
+ * Recursively find all *.mustache.* files in targetDir, render them using the provided data,
+ * write the rendered content to the same path with ".mustache." removed, and remove the original.
+ * Example: package.mustache.json -> package.json, config.mustache.ts -> config.ts
+ * @param targetDir - Root directory to search.
+ * @param data - Key/value pairs used for mustache interpolation.
+ */
+export async function renderMustacheTemplates(
+	targetDir: string,
+	data: Record<string, unknown>,
+): Promise<void> {
+	let entries: fs.Dirent[] = [];
+	try {
+		entries = await fs.promises.readdir(targetDir, { withFileTypes: true });
+	} catch {
+		return;
+	}
+
+	for (const entry of entries) {
+		const full = path.join(targetDir, entry.name);
+		if (entry.isDirectory()) {
+			await renderMustacheTemplates(full, data);
+		} else if (entry.isFile() && /\.mustache\./i.test(entry.name)) {
+			const raw = await fs.promises.readFile(full, "utf8");
+			const rendered = mustache.render(raw, data);
+			const dest = path.join(
+				path.dirname(full),
+				entry.name.replace(/\.mustache\./i, "."),
+			);
+			await fs.promises.writeFile(dest, rendered, "utf8");
+			await fs.promises.rm(full, { force: true });
+		}
 	}
 }

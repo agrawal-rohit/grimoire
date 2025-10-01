@@ -54,28 +54,31 @@ export async function initGitRepo(cwd: string): Promise<void> {
 	const defaultBranch = "main";
 
 	try {
-		// Initialize repository
-		await runAsync("git init", { cwd, stdio: "ignore" });
-
-		// Try to set the default branch to the desired name.
-		// On newer git versions, `git branch -M` works, older ones may require `symbolic-ref`.
-		try {
-			await runAsync(`git branch -M ${defaultBranch}`, {
-				cwd,
-				stdio: "ignore",
-			});
-		} catch {
-			try {
-				await runAsync(`git symbolic-ref HEAD refs/heads/${defaultBranch}`, {
-					cwd,
-					stdio: "ignore",
-				});
-			} catch {
-				// If both attempts fail, continue without failing the setup.
-			}
-		}
+		await runAsync(`git init -b ${defaultBranch}`, { cwd, stdio: "ignore" });
 	} catch (e) {
 		const msg = e instanceof Error ? e.message : String(e);
 		throw new Error(`Failed to initialize git repository in ${cwd}: ${msg}`);
+	}
+}
+
+/**
+ * Initialize a git repository in the provided directory.
+ * @param cwd - Absolute path to the target directory where git should be initialized
+ * @throws Error when initialization fails due to underlying git issues
+ */
+export async function makeInitialCommit(cwd: string): Promise<void> {
+	try {
+		// Ensure a repository exists
+		if (!isGitRepo(cwd)) await initGitRepo(cwd);
+
+		// Stage all files and create an initial commit
+		await runAsync("git add -A", { cwd, stdio: "ignore" });
+		await runAsync('git commit -m "chore: initial commit"', {
+			cwd,
+			stdio: "ignore",
+		});
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		throw new Error(`Failed to create initial git commit in ${cwd}: ${msg}`);
 	}
 }

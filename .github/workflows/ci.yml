@@ -42,7 +42,7 @@ jobs:
         run: pnpm run check:ci
 
       - name: Run tests
-        run: pnpm test:cov
+        run: pnpm cov
 
       - name: Check coverage file
         id: cov

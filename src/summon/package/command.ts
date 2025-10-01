@@ -1,20 +1,24 @@
 import fs from "node:fs";
 import path from "node:path";
+import chalk from "chalk";
 import logger from "../../cli/logger";
 import tasks from "../../cli/tasks";
-import { initGitRepo } from "../../core/git";
+import { initGitRepo, makeInitialCommit } from "../../core/git";
 import {
 	ensurePackageManager,
-	installAllDependencies,
+	getInstallScript,
 	LANGUAGE_PACKAGE_MANAGER,
 	type PackageManager,
 } from "../../core/pkg-manager";
-import { writeTemplateFiles } from "../../core/template-registry";
 import {
 	getSummonPackageConfiguration,
 	type SummonPackageConfiguration,
 } from "./config";
-import { createPackageDirectory, writePackageJson } from "./setup";
+import {
+	applyTemplateModifications,
+	createPackageDirectory,
+	writePackageTemplateFiles,
+} from "./setup";
 
 /** Entry point for "grimoire summon package".*/
 export async function runSummonPackage(
@@ -69,35 +73,52 @@ export async function runSummonPackage(
 			},
 		},
 		{
-			title: "Add template files",
+			title: `Add "${summonConfig.template}" template`,
 			task: async () => {
-				await writeTemplateFiles(
+				await writePackageTemplateFiles(targetDir, summonConfig);
+			},
+		},
+		{
+			title: "Modify template with user preferences",
+			task: async () => {
+				await applyTemplateModifications(
 					targetDir,
-					summonConfig.lang,
-					"package",
-					summonConfig.template,
+					summonConfig,
+					packageManagerVersion,
 				);
 			},
 		},
+	]);
+
+	await tasks.runWithTasks("Finishing up", undefined, [
 		{
-			title: "Update package.json",
-			task: async () => {
-				await writePackageJson(targetDir, summonConfig, packageManagerVersion);
-			},
-		},
-		{
-			title: "Install dependencies",
-			task: async () => {
-				await installAllDependencies(targetDir, packageManager);
-			},
-		},
-		{
-			title: "Initialize git with initial commit",
+			title: "Initialize git",
 			task: async () => {
 				await initGitRepo(targetDir);
 			},
 		},
+		{
+			title: "Make initial commit",
+			task: async () => {
+				await makeInitialCommit(targetDir);
+			},
+		},
 	]);
+
+	const installCmd = getInstallScript(packageManager);
+
+	console.log();
+	console.log(chalk.bold("Summoning complete. Next steps:"));
+	console.log();
+	console.log(
+		`  Enter your package directory using ${chalk.magentaBright(`cd ${summonConfig.name}`)}`,
+	);
+	console.log(`  Install dependencies with ${chalk.magentaBright(installCmd)}`);
+	console.log();
+	console.log(
+		`Stuck? Open an issue at ${chalk.magentaBright("https://github.com/agrawal-rohit/grimoire/issues")}`,
+	);
+	console.log();
 }
 
 export default runSummonPackage;

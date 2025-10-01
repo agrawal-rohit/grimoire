@@ -4,7 +4,7 @@ import animatedIntro from "./animated-intro";
 /** Logger utilities for the CLI. */
 export class Logger {
 	/**
-	 * Prints an introductory message with a magenta "grimoire" badge.
+	 * Prints an introductory message with a "grimoire" badge.
 	 * @param message - The introductory message to display.
 	 */
 	async intro(message: string): Promise<void> {

@@ -68,24 +68,16 @@ export async function ensurePackageManager(
 }
 
 /**
- * Install all dependencies for the package using the chosen package manager.
- * @param targetDir - Absolute path to the package directory.
- * @param pm - Selected package manager.
+ * Get the install command for the specified package manager to display in the next-steps box.
+ * @param pm - The package manager to use.
+ * @returns The shell command to install dependencies (e.g., "pnpm install").
  */
-export async function installAllDependencies(
-	targetDir: string,
-	pm: PackageManager,
-): Promise<void> {
-	let installCmd: string | undefined;
-
+export function getInstallScript(pm: PackageManager): string {
 	switch (pm) {
 		case "pnpm":
-			installCmd = "pnpm install";
-			break;
+			return "pnpm install";
 
 		default:
 			throw new Error(`Unsupported package manager: ${pm}`);
 	}
-
-	await runAsync(installCmd, { cwd: targetDir, stdio: "ignore" });
 }
