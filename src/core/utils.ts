@@ -15,13 +15,27 @@ export function capitalizeFirstLetter(string: string) {
  * @returns A normalized slug suitable for package/repo names.
  */
 export function toSlug(value: string): string {
-	return value
-		.trim() // Trim leading and trailing whitespace
-		.toLowerCase() // Convert to lowercase
-		.replace(/^@/, "") // Remove leading '@' from npm scopes
-		.replace(/.*\//, "") // Extract the basename by removing everything up to the last '/'
-		.replace(/[^a-z0-9._-]+/g, "-") // Replace invalid characters with '-'
-		.replace(/^-+|-+$/g, ""); // Trim leading and trailing dashes
+	// Normalize case/whitespace and extract last path-like segment (supports URLs and Windows paths)
+	const normalized = value.trim().toLowerCase();
+	const segments = normalized.split(/[\\/]+/).filter(Boolean);
+	let base = segments.length ? segments[segments.length - 1] : normalized;
+
+	// Handle npm scopes like "@scope/name" (base will typically be "name", but keep safe)
+	base = base.replace(/^@/, "");
+
+	// Strip common VCS suffix if present
+	base = base.replace(/\.git$/, "");
+
+	// Replace invalid characters with a hyphen
+	base = base.replace(/[^a-z0-9._-]+/g, "-");
+
+	// Collapse multiple hyphens
+	base = base.replace(/-+/g, "-");
+
+	// Trim leading and trailing hyphens
+	base = base.replace(/^-+|-+$/g, "");
+
+	return base;
 }
 
 /**

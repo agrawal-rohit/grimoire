@@ -29,7 +29,7 @@ export const templatePublicPaths: Record<Language | "shared", string[]> = {
 export type SummonPackageConfiguration = {
 	/** The selected programming language for the package. */
 	lang: Language;
-	/** The user's display name. */
+	/** The package name. */
 	name: string;
 	/** The chosen template for the package. */
 	template: string;
@@ -110,7 +110,9 @@ export async function getPackageLanguage(
 		languageOptions.map((opt) => opt.value),
 	);
 	if (!validLanguages.has(language))
-		throw new Error(`Unsupported language: ${language}`);
+		throw new Error(
+			`Unsupported language: ${language} (valid: ${Array.from(validLanguages).join(", ")})`,
+		);
 
 	return language;
 }
@@ -133,11 +135,10 @@ export async function getPackageName(
 			{ required: true },
 			"my-package",
 		));
-	const cleanedName = toSlug(name);
 
-	validatePackageName(cleanedName, language);
+	validatePackageName(name, language);
 
-	return cleanedName;
+	return name;
 }
 
 export async function getPackageTemplate(
@@ -190,7 +191,9 @@ export async function getPackageTemplate(
 		);
 
 	if (!candidateTemplates.includes(template))
-		throw new Error(`Unsupported template: ${template}`);
+		throw new Error(
+			`Unsupported template: ${template} (valid: ${Array.from(candidateTemplates).join(", ")})`,
+		);
 
 	return template;
 }

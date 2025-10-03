@@ -164,13 +164,39 @@ export async function renderMustacheTemplates(
 			await renderMustacheTemplates(full, data);
 		} else if (entry.isFile() && /\.mustache\./i.test(entry.name)) {
 			const raw = await fs.promises.readFile(full, "utf8");
-			const rendered = mustache.render(raw, data);
-			const dest = path.join(
-				path.dirname(full),
-				entry.name.replace(/\.mustache\./i, "."),
-			);
-			await fs.promises.writeFile(dest, rendered, "utf8");
-			await fs.promises.rm(full, { force: true });
+
+			// Preserve GitHub Actions expressions like ${{ secrets.X }} by masking them before rendering.
+			const ghExprPattern = /\$\{\{[\s\S]*?\}\}/g;
+			const ghExprs: string[] = [];
+			const masked = raw.replace(ghExprPattern, (m) => {
+				const token = `__GH_EXPR_${ghExprs.length}__`;
+				ghExprs.push(m);
+				return token;
+			});
+
+			const previousEscape = mustache.escape;
+			try {
+				// Disable HTML escaping to preserve literal "/" and other characters during render
+				mustache.escape = (s: string) => s;
+
+				let rendered = mustache.render(masked, data);
+
+				// Restore masked GitHub Actions expressions
+				ghExprs.forEach((expr, i) => {
+					const token = `__GH_EXPR_${i}__`;
+					rendered = rendered.split(token).join(expr);
+				});
+
+				const dest = path.join(
+					path.dirname(full),
+					entry.name.replace(/\.mustache\./i, "."),
+				);
+				await fs.promises.writeFile(dest, rendered, "utf8");
+				await fs.promises.rm(full, { force: true });
+			} finally {
+				// Restore original Mustache escape behavior
+				mustache.escape = previousEscape;
+			}
 		}
 	}
 }

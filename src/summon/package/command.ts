@@ -10,6 +10,7 @@ import {
 	LANGUAGE_PACKAGE_MANAGER,
 	type PackageManager,
 } from "../../core/pkg-manager";
+import { toSlug } from "../../core/utils";
 import {
 	getSummonPackageConfiguration,
 	type SummonPackageConfiguration,
@@ -17,6 +18,7 @@ import {
 import {
 	applyTemplateModifications,
 	createPackageDirectory,
+	getRequiredGithubSecrets,
 	writePackageTemplateFiles,
 } from "./setup";
 
@@ -37,7 +39,10 @@ export async function runSummonPackage(
 	let packageManagerVersion = "";
 	const packageManager: PackageManager =
 		LANGUAGE_PACKAGE_MANAGER[summonConfig.lang];
-	const resolvedTargetDir = path.resolve(process.cwd(), summonConfig.name);
+	const resolvedTargetDir = path.resolve(
+		process.cwd(),
+		toSlug(summonConfig.name),
+	);
 
 	// Preflight checks
 	console.log();
@@ -68,7 +73,7 @@ export async function runSummonPackage(
 			task: async () => {
 				targetDir = await createPackageDirectory(
 					process.cwd(),
-					summonConfig.name,
+					toSlug(summonConfig.name),
 				);
 			},
 		},
@@ -90,6 +95,7 @@ export async function runSummonPackage(
 		},
 	]);
 
+	let githubSecrets: string[] = [];
 	await tasks.runWithTasks("Finishing up", undefined, [
 		{
 			title: "Initialize git",
@@ -103,17 +109,47 @@ export async function runSummonPackage(
 				await makeInitialCommit(targetDir);
 			},
 		},
+		{
+			title: "Fetch github secrets list",
+			task: async () => {
+				githubSecrets = await getRequiredGithubSecrets(targetDir);
+			},
+		},
 	]);
 
 	const installCmd = getInstallScript(packageManager);
 
+	let currentStep = 1;
 	console.log();
 	console.log(chalk.bold("Summoning complete. Next steps:"));
 	console.log();
 	console.log(
-		`  Enter your package directory using ${chalk.magentaBright(`cd ${summonConfig.name}`)}`,
+		`  ${currentStep}. Enter your package directory using ${chalk.magentaBright(`cd ${toSlug(summonConfig.name)}`)}`,
 	);
-	console.log(`  Install dependencies with ${chalk.magentaBright(installCmd)}`);
+	currentStep += 1;
+
+	console.log(
+		`  ${currentStep}. Push your initial commit with ${chalk.magentaBright("git push -u origin main")}`,
+	);
+	currentStep += 1;
+
+	if (githubSecrets.length > 0) {
+		console.log(
+			`  ${currentStep}. Configure the following repository secrets in your GitHub project :`,
+		);
+		currentStep += 1;
+		githubSecrets.forEach((secret) => {
+			console.log(`    - ${chalk.magentaBright(secret)}`);
+		});
+	}
+
+	console.log(
+		`  ${currentStep}. Install dependencies with ${chalk.magentaBright(installCmd)}`,
+	);
+	currentStep += 1;
+
+	console.log(`  ${currentStep}. Happy building, fellow wizard!`);
+
 	console.log();
 	console.log(
 		`Stuck? Open an issue at ${chalk.magentaBright("https://github.com/agrawal-rohit/grimoire/issues")}`,

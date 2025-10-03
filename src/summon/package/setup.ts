@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import mitLicense from "spdx-license-list/licenses/MIT.json";
 import {
@@ -48,6 +49,36 @@ export async function applyTemplateModifications(
 	await renderMustacheTemplates(targetDir, templateMetadata);
 }
 
+export async function getRequiredGithubSecrets(
+	targetDir: string,
+): Promise<string[]> {
+	const secrets = new Set<string>();
+
+	try {
+		const workflowsDir = path.join(targetDir, ".github", "workflows");
+		const entries = await fs.promises.readdir(workflowsDir, {
+			withFileTypes: true,
+		});
+		const files = entries
+			.filter((e) => e.isFile())
+			.map((e) => path.join(workflowsDir, e.name));
+
+		const secretRegex = /secrets\.([A-Z0-9_]+)/g;
+		for (const file of files) {
+			const content = await fs.promises.readFile(file, "utf8");
+			for (const match of content.matchAll(secretRegex)) {
+				const key = match[1];
+				if (key && key.toUpperCase() !== "GITHUB_TOKEN") {
+					secrets.add(key);
+				}
+			}
+		}
+	} catch {
+		// No workflows directory found; ignore
+	}
+
+	return Array.from(secrets).sort();
+}
 /**
  * Write the chosen template files for a resource into the target directory.
  * @param targetDir - Package root directory to write into.
