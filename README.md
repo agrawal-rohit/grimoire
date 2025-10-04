@@ -50,7 +50,7 @@ I found myself spending a criminal amount of time configuring every new library,
 * Automatically generated Readme with badges through [shields.io][shields]
 * Automatically generated MIT license with [spdx][spdx-license-list]
 * Automatically generated community files _(contribution guidelines, issue templates, and pull request checklists)_
-* Gitflow-inspired branching setup for preview and production releases _(`next` -> development, `main` -> production, `alpha`/`beta` -> preview environments)_
+* A pre-configured [branching setup and release process](#branching-setup-and-release-workflow) for preview and production releases
 * Sensible [templates][] for common use cases encountered in modern development
 
 [github-actions]: https://github.com/features/actions
@@ -64,6 +64,7 @@ I found myself spending a criminal amount of time configuring every new library,
 In addition to the general tooling listed above, `grimoire` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
 
 ### Javascript
+
 Great choice when building for the web _(UI libraries and frameworks for the browser. Can also be a good server-side language when executed in a JS runtime like [node][], [bun][], or [deno][])_.
 
 * Unit testing with [vitest][]
@@ -132,9 +133,21 @@ The details for summon command and the list of supported resources are provided 
 > [!IMPORTANT]
 > Some workflows in the generated projects require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
 
+`grimoire` enforces an opinionated branching strategy for stress-free delivery regardless of language or project type.
+
+**Branches**
+
+The following two branches are essential to the workflow and must be protected _(you can import [this ruleset](https://gist.github.com/agrawal-rohit/5d05d1ab395dec3b73d6db6adc87838e) in your Github project to enforce this)_:
+
+- `main`: Latest development branch. All feature branches merge here.
+- `release/vX.Y.Z`: Cut from `main` for a specific version (for example, `release/v1.2.3`). Use this branch for all patch fixes for that release.
+
+For detailed information about the release process, including how to create release candidates and promote them to production, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
+
+
 ### Examples
 
-#### Create a public NPM package:
+#### Create a public NPM package
 
 ```bash
 npx grimoire@latest summon package \
@@ -144,7 +157,7 @@ npx grimoire@latest summon package \
   --public
 ```
 
-#### Create a private internal Typescript library:
+#### Create a private internal Typescript library
 
 ```bash
 npx grimoire@latest summon package \

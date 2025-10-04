@@ -9,7 +9,6 @@ import {
 	writeFileAsync,
 } from "../../core/fs";
 import { resolveTemplatesDir } from "../../core/template-registry";
-
 import type { SummonPackageConfiguration } from "./config";
 import { templatePublicPaths } from "./config";
 
@@ -43,10 +42,20 @@ export async function applyTemplateModifications(
 ): Promise<void> {
 	const templateMetadata = {
 		packageManagerVersion,
+		templateHasPlayground: summonConfig.template !== "default",
 		...summonConfig,
 	};
 
 	await renderMustacheTemplates(targetDir, templateMetadata);
+
+	// Remove public files after rendering, so templated files match by basename
+	if (!summonConfig.public) {
+		const publicFiles = [
+			...templatePublicPaths.shared,
+			...(templatePublicPaths[summonConfig.lang] ?? []),
+		];
+		await removeFilesByBasename(targetDir, publicFiles);
+	}
 }
 
 export async function getRequiredGithubSecrets(
@@ -111,18 +120,8 @@ export async function writePackageTemplateFiles(
 	);
 	await copyDirSafeAsync(chosenTemplateDir, targetDir);
 
-	// Remove public files from the targetDir if a private package is requested
-	if (!summonConfig.public) {
-		const publicFiles = [
-			...templatePublicPaths.shared,
-			...(templatePublicPaths[summonConfig.lang] ?? []),
-		];
-
-		await removeFilesByBasename(targetDir, publicFiles);
-	}
-
 	// Add MIT license
-	if (summonConfig.authorName) {
+	if (summonConfig.public && summonConfig.authorName) {
 		const year = new Date().getFullYear().toString();
 
 		const licenseText = mitLicense.licenseText

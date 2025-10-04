@@ -41,8 +41,6 @@ export type SummonPackageConfiguration = {
 	authorGitUsername?: string;
 	/** Optional Git email address (Only required for public packages). */
 	authorGitEmail?: string;
-	/** Optional packager registry username (Only required for public packages). */
-	authorPackageRegistryUsername?: string;
 };
 
 /**
@@ -60,13 +58,10 @@ export async function getSummonPackageConfiguration(
 	let authorName: string | undefined;
 	let authorGitEmail: string | undefined;
 	let authorGitUsername: string | undefined;
-	let authorPackageRegistryUsername: string | undefined;
 	if (isPublic) {
 		authorName = await promptAuthorName();
 		authorGitEmail = await promptAuthorGitEmail();
 		authorGitUsername = await promptAuthorGitUsername();
-		authorPackageRegistryUsername =
-			await promptAuthorPackageRegistryUsername(lang);
 	}
 
 	const answers: SummonPackageConfiguration = {
@@ -77,7 +72,6 @@ export async function getSummonPackageConfiguration(
 		authorName: authorName,
 		authorGitEmail: authorGitEmail,
 		authorGitUsername: authorGitUsername,
-		authorPackageRegistryUsername: authorPackageRegistryUsername,
 	};
 
 	return answers;
@@ -224,14 +218,18 @@ export async function getPackageVisibility(
 /** Prompt for author's full name (defaults to Git config when available). */
 export async function promptAuthorName(): Promise<string> {
 	const gitName = await getGitUsername();
-	return await prompts.textInput("What's your name?", undefined, gitName);
+	return await prompts.textInput(
+		"What's your name? (Will be used for communication and licensing)",
+		undefined,
+		gitName,
+	);
 }
 
 /** Prompt for author's Git email (defaults to Git config when available). */
 export async function promptAuthorGitEmail(): Promise<string> {
 	const inferredGitEmail = await getGitEmail();
 	return await prompts.textInput(
-		"What's your email?",
+		"What's your email? (Will be used for communication)",
 		undefined,
 		inferredGitEmail,
 	);
@@ -245,27 +243,10 @@ export async function promptAuthorGitUsername(): Promise<string> {
 		: undefined;
 
 	const finalGitUserName = await prompts.textInput(
-		"What's your GitHub username?",
+		"What's your GitHub username? (Will be used for communication links and status badges)",
 		undefined,
 		suggestedUsername,
 	);
 
 	return toSlug(finalGitUserName);
-}
-
-/** Prompt for author's package registry username (e.g., NPM for TypeScript). */
-export async function promptAuthorPackageRegistryUsername(
-	language: Language,
-): Promise<string> {
-	const gitName = await getGitUsername();
-	const suggestedUsername = gitName
-		? gitName.toLowerCase().replace(/\s+/g, "")
-		: undefined;
-	const registry = LANGUAGE_PACKAGE_REGISTRY[language];
-
-	return await prompts.textInput(
-		`What's your ${registry} username?`,
-		undefined,
-		suggestedUsername,
-	);
 }

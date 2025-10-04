@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to `grimoire`! This guide will help you get started with the development process, from setting up your environment to submitting changes.
+Thanks for your interest in contributing to `{{ name }}`! This guide will help you get started with the development process, from setting up your environment to submitting changes.
 
 ## Table of Contents
 
@@ -11,7 +11,6 @@ Thanks for your interest in contributing to `grimoire`! This guide will help you
 - [Documentation](#documentation)
 - [Release Process](#release-process)
 - [Dependencies](#dependencies)
-- [Proposing Templates](#proposing-templates)
 - [Security](#security)
 - [Maintainer Guidelines](#maintainer-guidelines)
 - [Recognition](#recognition)
@@ -19,9 +18,9 @@ Thanks for your interest in contributing to `grimoire`! This guide will help you
 ## Getting Help
 
 If you have questions, ideas, or need help:
-- Search existing [GitHub Discussions](https://github.com/agrawal-rohit/grimoire/discussions) first
+- Search existing [GitHub Discussions](https://github.com/{{ authorGitUsername }}/{{ name }}/discussions) first
 - Open a new discussion for questions and proposals
-- Create a [GitHub Issue](https://github.com/agrawal-rohit/grimoire/issues) for bug reports
+- Create a [GitHub Issue](https://github.com/{{ authorGitUsername }}/{{ name }}/issues) for bug reports
 
 Please be specific about your environment and include steps to reproduce issues when reporting bugs.
 
@@ -29,15 +28,14 @@ Please be specific about your environment and include steps to reproduce issues 
 
 1. Fork the repository
 2. Install dependencies: `pnpm install`
-3. Create a local build: `pnpm pack`
-4. Test the package locally: `npx ./grimoire-*.tgz`
-
-The project uses:
-- **Node.js** v20+ for runtime
-- **pnpm** for package management
-- **TypeScript** for type safety
-- **Biome** for linting and formatting
-- **Vitest** for testing
+{{#templateHasPlayground}}
+3. Start the local playground: `pnpm dev`
+{{/templateHasPlayground}}
+{{^templateHasPlayground}}
+3. Start development (watch): `pnpm dev`
+{{/templateHasPlayground}}
+4. Run the test suite: `pnpm test`
+5. Build the library: `pnpm build`
 
 ## Making Changes
 
@@ -108,48 +106,10 @@ Releases are automated through our CI system:
 - Security updates and critical fixes are always welcome
 - Include rationale and testing notes for dependency changes
 
-## Proposing Templates
-
-Grimoire uses a filesystem-based template registry organized by language and resource type. When proposing new templates, follow this hierarchy:
-
-### Template Structure
-
-```
-templates/
-├── shared/                          # Global shared files (applies to all languages)
-├── {language}/                      # Language-specific directory (e.g., typescript)
-│   ├── shared/                      # Language-level shared files
-│   └── {resource}/                  # Resource type (e.g., package)
-│       ├── shared/                  # Resource-level shared files
-│       └── {template}/              # Specific template (e.g., default)
-```
-
-Files are copied in this order (later files override earlier ones):
-1. `templates/shared` (global)
-2. `templates/{language}/shared` (language-specific)
-3. `templates/{language}/{resource}/shared` (resource-specific)
-4. `templates/{language}/{resource}/{template}` (template-specific)
-
-### Template Files
-
-- Use `.mustache` extension for templated files (e.g., `package.json.mustache`)
-- Use mustache syntax for variables: `{{ variableName }}`
-- The `summon` configuration is passed as the mustache context
-- Non-mustache files are copied as-is
-
-### Proposing New Templates
-
-When proposing a new template:
-1. Follow the existing directory structure
-2. Include all necessary files for a complete working setup
-3. Test your template with `pnpm pack` and `npx ./grimoire-*.tgz`
-4. Document what the template provides in your pull request
-5. Include examples of generated output
-
 ## Security
 
 - **Do not** report security vulnerabilities in public issues
-- Use GitHub's [private vulnerability reporting](https://github.com/agrawal-rohit/grimoire/security/advisories)
+- Use GitHub's [private vulnerability reporting](https://github.com/{{ authorGitUsername }}/{{ name }}/security/advisories)
 - We'll acknowledge reports within 48 hours and work on a fix
 
 ## Maintainer Guidelines
@@ -162,7 +122,7 @@ Some guidelines for maintainers:
 - Production GitHub Releases must not be marked as prereleases
 - Keep required checks and branch protection enabled on `main` and `release/v*` branches
 - Avoid modifying automation without discussion:
-  - Configuration files (`release.config.cjs`, `biome.json`, etc.)
+  - Configuration files (`biome.json`, `commitlint.config.js`, etc.)
   - CI workflows (`.github/workflows/*`)
   - Release tooling
 

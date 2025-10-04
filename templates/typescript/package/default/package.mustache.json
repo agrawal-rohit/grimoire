@@ -2,7 +2,12 @@
   "name": "{{ name }}",
   "version": "0.0.0",
   "type": "module",
-  "private": {{#public}}false{{/public}}{{^public}}true{{/public}},
+  {{#public}}
+  "private": false,
+  {{/public}}
+  {{^public}}
+  "private": false,
+  {{/public}}
   "packageManager": "{{ packageManagerVersion }}",
   {{#public}}
   "license": "MIT",
@@ -10,11 +15,11 @@
   "bugs": "https://github.com/{{ authorGitUsername }}/{{ name }}/issues",
   "repository": "https://github.com/{{ authorGitUsername }}/{{ name }}",
   "author": "{{ authorName }} <{{ authorGitEmail }}>",
-  {{/public}}
   "files": ["dist"],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  {{/public}}
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -24,7 +29,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "pnpm exec biome lint --write",
 		"format": "pnpm exec biome format --write",
-		"check": "pnpm run typecheck && pnpm exec biome check --write",{{#public}}\n"release": "semantic-release",{{/public}}
+		"check": "pnpm run typecheck && pnpm exec biome check --write",
+		{{#public}}
+    "release": "semantic-release",
+    {{/public}}
   },
   "devDependencies": {
 		"husky": "^9.1.7",
@@ -33,7 +41,9 @@
     "@biomejs/biome": "2.2.3",
     "lint-staged": "^16.1.6",
     "@vitest/coverage-v8": "3.2.4",
+    {{#public}}
 		"semantic-release": "^24.2.7",
+		{{/public}}
 		"typescript": "^5.9.2",
 		"vitest": "^3.2.4"
   }
