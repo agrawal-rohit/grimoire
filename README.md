@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://cdn.rohit.build/work%3Agrimoire%3Alogo.png" alt="Grimoire" style="width: 40%; margin: auto" />
+  <img src="https://cdn.rohit.build/work%3Agrimoire%3Alogo.png" alt="Grimoire" style="width: 30%; margin: auto" />
 </h1>
 
 <div align="center">
@@ -72,7 +72,7 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 * Pre-commit checks with [husky][]
 * Pre-configured package bundling using [tsdown][]
 * Fast and disk-efficient dependency management using [pnpm][]
-* Type-safety by default using [typescript][]
+* Type-safety using [typescript][]
 * Code linting and formatting with [biome][]
 * Version management and package publishing to [npm][] using [semantic release][semantic-release]
 
@@ -90,7 +90,8 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 [pnpm]: https://pnpm.io/
 [npx]: https://www.npmjs.com/package/npx
 
-* _(Python support coming soon)_
+> [!NOTE]
+> Python support coming soon
 
 ## Usage
 
