@@ -78,20 +78,23 @@ jobs:
         run: |
           pnpm publish --access public --no-git-checks --tag ${{ steps.parse.outputs.npm_tag }}
 
-      - name: Generate changelog
+      - name: Generate release notes
         run: |
-          pnpm exec git-cliff --latest --strip all --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
+          pnpm exec git-cliff --latest --strip all --tag ${{ steps.parse.outputs.tag }} --output RELEASE_NOTES.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.parse.outputs.tag }}
           name: ${{ steps.parse.outputs.tag }}
-          body_path: CHANGELOG.md
+          body_path: RELEASE_NOTES.md
           prerelease: ${{ steps.parse.outputs.prerelease }}
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate full changelog
+        run: pnpm exec git-cliff --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
 
       - name: Update main branch to latest stable
         if: steps.parse.outputs.prerelease == 'false'

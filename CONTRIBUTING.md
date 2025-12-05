@@ -49,7 +49,7 @@ The project uses:
 
 ### Commit Messages
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+This project follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 type(scope): short description
@@ -89,7 +89,7 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 ## Release Process
 
-`grimoire` uses a simple tag-driven release workflow - push a tag at the time of release and the [Github Actions](https://github.com/features/actions) takes care of the rest. This same workflow is configured for projects scaffolded with `grimoire`, so understanding how it's set up is important for both contributors and users.
+This project uses a simple tag-driven release workflow powered by [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). Push a tag, and [Github Actions](https://github.com/features/actions) handles the rest. This same workflow is configured for projects scaffolded with `grimoire`.
 
 ### How It Works
 
@@ -99,8 +99,6 @@ All development happens on `main`. When you're ready to release, just push a sem
 - **Release candidates** (`v1.2.3-rc.1`) → Published with the `rc` tag
 - **Beta releases** (`v1.2.3-beta.1`) → Published with the `beta` tag
 - **Alpha releases** (`v1.2.3-alpha.1`) → Published with the `alpha` tag
-
-That's it. No version bump commits, no release branches, no manual changelog updates.
 
 ### Creating a Release
 
@@ -124,13 +122,11 @@ git push origin v1.2.3-rc.1
 
 When you push a tag, the release workflow kicks in and:
 
-1. Syncs the version in `package.json`
-2. Installs dependencies and builds the package
-3. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
-4. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
-5. Creates a GitHub Release with the changelog attached
-
-All of this happens automatically. You just push the tag.
+1. Installs dependencies and builds the package
+2. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
+3. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
+4. Creates a GitHub Release with the changelog
+5. Generates the updated `CHANGELOG.md` and bumps the `package.json` version in the repository
 
 ### Testing Pre-releases
 
@@ -138,7 +134,7 @@ After pushing a pre-release tag, you can test it before cutting a stable release
 
 ```bash
 # For grimoire itself
-npx grimoire@rc --help
+npx @agrawalrohit/grimoire@rc --help
 
 # For your scaffolded projects
 npm install my-package@rc
@@ -155,14 +151,14 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-CI will publish it to npm as the stable `latest` version. Done.
+CI will publish it to npm as the stable `latest` version, update the `CHANGELOG.md` and `package.json` version.
 
 ### Things to Remember
 
 - Keep `package.json` version at `0.0.0` in the repo — never bump it manually
 - Don't commit version changes — CI handles that during release
 - Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
-- Tags are immutable once pushed
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com
 
 ## Dependencies
 
@@ -205,7 +201,7 @@ Files are copied in this order (files with the same name are overriden based on 
 When proposing a new template:
 1. Follow the existing directory structure
 2. Include all necessary files for a complete working setup
-3. Test your template with `pnpm pack` and `npx ./grimoire-*.tgz`
+3. Test your template with `pnpm pack` and `npx <path-to-local-build>.tgz`
 4. Document what the template provides in your pull request
 5. Include examples of generated output
 

@@ -47,7 +47,7 @@ Please be specific about your environment and include steps to reproduce issues 
 
 ### Commit Messages
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+This project follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 type(scope): short description
@@ -87,7 +87,7 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 ## Release Process
 
-This project uses a dead-simple, tag-driven release workflow—push a tag, CI does the rest.
+This project uses a simple tag-driven release workflow powered by [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). Push a tag, and [Github Actions](https://github.com/features/actions) handles the rest.
 
 ### How It Works
 
@@ -97,8 +97,6 @@ All development happens on `main`. When you're ready to release, just push a sem
 - **Release candidates** (`v1.2.3-rc.1`) → Published with the `rc` tag  
 - **Beta releases** (`v1.2.3-beta.1`) → Published with the `beta` tag
 - **Alpha releases** (`v1.2.3-alpha.1`) → Published with the `alpha` tag
-
-That's it. No version bump commits, no release branches, no manual changelog updates.
 
 ### Creating a Release
 
@@ -122,19 +120,18 @@ git push origin v1.2.3-rc.1
 
 When you push a tag, the release workflow kicks in and:
 
-1. Syncs the version in `package.json`
-2. Installs dependencies and builds the package
-3. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
-4. Generates a changelog from your conventional commits using git-cliff
-5. Creates a GitHub Release with the changelog attached
-
-All of this happens automatically. You just push the tag.
+1. Installs dependencies and builds the package
+2. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
+3. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
+4. Creates a GitHub Release with the changelog
+5. Generates the updated `CHANGELOG.md` and bumps the `package.json` version in the repository
 
 ### Things to Remember
 
 - Keep `package.json` version at `0.0.0` in the repo — never bump it manually
 - Don't commit version changes — CI handles that during release
 - Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com
 
 ## Dependencies
 
