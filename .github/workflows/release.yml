@@ -114,13 +114,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Checkout main and reset to the tag
+          git fetch origin main
+          git checkout main
+          git reset --hard ${{ steps.parse.outputs.tag }}
+
           # Commit release artifacts (CHANGELOG.md, package.json with updated version)
           git add CHANGELOG.md package.json
           if ! git diff --staged --quiet; then
             git commit -m "chore(release): ${{ steps.parse.outputs.tag }}"
           fi
 
-          # Push to main
+          # Force push to main
           git push origin main --force
 
           echo "Updated main branch to ${{ steps.parse.outputs.tag }}"
