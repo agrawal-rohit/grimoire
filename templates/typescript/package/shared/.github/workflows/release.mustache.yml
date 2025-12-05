@@ -80,7 +80,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          pnpm exec git-cliff --latest --strip header --strip footer --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
+          pnpm exec git-cliff --latest --strip header,footer --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
