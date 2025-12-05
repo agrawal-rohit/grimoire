@@ -64,12 +64,12 @@ jobs:
             echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Sync version in package.json
         run: |
           npm version --no-git-tag-version "${{ steps.parse.outputs.version }}"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build
@@ -80,7 +80,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          pnpm exec git-cliff --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
+          pnpm exec git-cliff --latest --strip header --strip footer --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -110,9 +110,20 @@ jobs:
             exit 0
           fi
 
-          # Update main to this tag
+          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push origin ${{ steps.parse.outputs.tag }}:refs/heads/main --force
+
+          # Checkout main and reset to the tag
+          git checkout -B main ${{ steps.parse.outputs.tag }}
+
+          # Commit release artifacts (CHANGELOG.md, package.json with updated version)
+          git add CHANGELOG.md package.json package-lock.json pnpm-lock.yaml
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(release): ${{ steps.parse.outputs.tag }}"
+          fi
+
+          # Push to main
+          git push origin main --force
 
           echo "Updated main branch to ${{ steps.parse.outputs.tag }}"
