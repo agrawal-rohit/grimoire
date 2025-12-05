@@ -92,38 +92,3 @@ jobs:
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate full changelog
-        run: pnpm exec git-cliff --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
-
-      - name: Create PR to update CHANGELOG
-        if: steps.parse.outputs.prerelease == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create a new branch for the release update
-          BRANCH_NAME="chore/release-${{ steps.parse.outputs.tag }}"
-          git checkout -b "$BRANCH_NAME"
-
-          # Add CHANGELOG.md and package.json with updated version
-          git add CHANGELOG.md package.json
-          if git diff --staged --quiet; then
-            echo "No changes to commit, skipping PR creation"
-            exit 0
-          fi
-
-          git commit -m "chore(release): update for ${{ steps.parse.outputs.tag }}"
-          git push origin "$BRANCH_NAME"
-
-          # Create pull request using GitHub CLI
-          gh pr create \
-            --title "chore(release): update for ${{ steps.parse.outputs.tag }}" \
-            --body "Automated release updates for ${{ steps.parse.outputs.tag }}" \
-            --base main \
-            --head "$BRANCH_NAME"
-
-          echo "Created PR to update release artifacts"
