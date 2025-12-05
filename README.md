@@ -8,7 +8,7 @@
   <p align="center" style="width: 80%; margin: auto">
     <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/agrawal-rohit/grimoire/ci.yml">
     <img alt="Coverage" src="https://img.shields.io/codacy/coverage/039fa9ecca5d4927aace0faedc3e24bf">
-    <img alt="Downloads" src="https://img.shields.io/npm/dt/grimoire">
+    <img alt="Downloads" src="https://img.shields.io/npm/dt/@agrawalrohit/grimoire">
     <img alt="Biome" src="https://img.shields.io/badge/code_style-biome-60a5fa">
     <img alt="License" src="https://img.shields.io/github/license/agrawal-rohit/grimoire" />
   </p>
@@ -104,22 +104,10 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 
 ### Quickstart
 
-You can run via [npx][] (no install required):
+The easiest way to start is via [npx][] (no install required):
 
 ```bash
-npx grimoire@latest --help
-```
-
-Or install globally:
-
-```bash
-npm i -g grimoire
-```
-
-Then run:
-
-```bash
-grimoire --help
+npx @agrawalrohit/grimoire@latest --help
 ```
 
 ### Spells
@@ -129,7 +117,7 @@ grimoire --help
 **Summoning** creates a new project from opinionated templates so you can start writing code without worrying about the tooling, tests, and CI. You can summon a resource using the following command:
 
 ```bash
-npx grimoire@latest summon <resource>
+npx @agrawalrohit/grimoire@latest summon <resource>
 ```
 
 The details for summon command and the list of supported resources are provided in the [summoning command reference](#summon-resource).
@@ -144,7 +132,7 @@ The details for summon command and the list of supported resources are provided 
 #### Create a public NPM package
 
 ```bash
-npx grimoire@latest summon package \
+npx @agrawalrohit/grimoire@latest summon package \
   --name my-package \
   --lang typescript \
   --template default \
@@ -154,7 +142,7 @@ npx grimoire@latest summon package \
 #### Create a private internal Typescript library
 
 ```bash
-npx grimoire@latest summon package \
+npx @agrawalrohit/grimoire@latest summon package \
   --name internal-utils \
   --lang typescript \
   --template default
@@ -172,13 +160,13 @@ Scaffold a new `package` for one of the [supported languages](#supported-languag
 If you're new to `grimoire`, I would recommend using the interactive CLI for a guided experience.
 
 ```bash
-npx grimoire@latest summon package
+npx @agrawalrohit/grimoire@latest summon package
 ```
 
 Once you're acquainted, you can skip through most prompts by providing the values through the CLI flags directly.
 
   ```bash
-  npx grimoire@latest summon package \
+  npx @agrawalrohit/grimoire@latest summon package \
     --name my-lib \
     --lang typescript \
     --template default \
