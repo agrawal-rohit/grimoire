@@ -96,39 +96,34 @@ jobs:
       - name: Generate full changelog
         run: pnpm exec git-cliff --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
 
-      - name: Update main branch to latest stable
+      - name: Create PR to update CHANGELOG
         if: steps.parse.outputs.prerelease == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Only update main if this is a stable release
-          # Get the commit SHA for this tag
-          TAG_SHA=$(git rev-parse ${{ steps.parse.outputs.tag }})
-
-          # Get the current main branch SHA
-          MAIN_SHA=$(git rev-parse origin/main)
-
-          # Check if main is an ancestor of this tag (i.e., tag is ahead of main)
-          # If main is NOT an ancestor, skip update (prevent rewind)
-          if ! git merge-base --is-ancestor "$MAIN_SHA" "$TAG_SHA"; then
-            echo "Tag ${{ steps.parse.outputs.tag }} is not ahead of main branch. Skipping main update to prevent rewind."
-            exit 0
-          fi
-
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Checkout main and reset to the tag
-          git fetch origin main
-          git checkout main
-          git reset --hard ${{ steps.parse.outputs.tag }}
+          # Create a new branch for the release update
+          BRANCH_NAME="chore/release-${{ steps.parse.outputs.tag }}"
+          git checkout -b "$BRANCH_NAME"
 
-          # Commit release artifacts (CHANGELOG.md, package.json with updated version)
+          # Add CHANGELOG.md and package.json with updated version
           git add CHANGELOG.md package.json
-          if ! git diff --staged --quiet; then
-            git commit -m "chore(release): ${{ steps.parse.outputs.tag }}"
+          if git diff --staged --quiet; then
+            echo "No changes to commit, skipping PR creation"
+            exit 0
           fi
 
-          # Force push to main
-          git push origin main --force
+          git commit -m "chore(release): update for ${{ steps.parse.outputs.tag }}"
+          git push origin "$BRANCH_NAME"
 
-          echo "Updated main branch to ${{ steps.parse.outputs.tag }}"
+          # Create pull request using GitHub CLI
+          gh pr create \
+            --title "chore(release): update for ${{ steps.parse.outputs.tag }}" \
+            --body "Automated release updates for ${{ steps.parse.outputs.tag }}" \
+            --base main \
+            --head "$BRANCH_NAME"
+
+          echo "Created PR to update release artifacts"

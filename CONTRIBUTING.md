@@ -126,7 +126,7 @@ When you push a tag, the release workflow kicks in and:
 2. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
 3. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
 4. Creates a GitHub Release with the changelog
-5. Generates the updated `CHANGELOG.md` and bumps the `package.json` version in the repository
+5. Creates a pull request to update `CHANGELOG.md` and `package.json` version in the repository (Only after stable releases)
 
 ### Testing Pre-releases
 
@@ -151,14 +151,15 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-CI will publish it to npm as the stable `latest` version, update the `CHANGELOG.md` and `package.json` version.
+CI will publish it to npm as the stable `latest` version and create a PR to update `CHANGELOG.md` and `package.json`. Merge the PR when ready.
 
 ### Things to Remember
 
 - Keep `package.json` version at `0.0.0` in the repo — never bump it manually
 - Don't commit version changes — CI handles that during release
 - Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
-- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com
+- Merge the automated PR after stable releases (updates CHANGELOG.md and package.json version)
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com (see repository settings for details)
 
 ## Dependencies
 
