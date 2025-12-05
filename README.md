@@ -1,6 +1,8 @@
-<h1 align="center">
-  <img src="https://cdn.rohit.build/work%3Agrimoire%3Alogo.png" alt="Grimoire" style="width: 30%; margin: auto" />
-</h1>
+<div align="center">
+  <img src="https://cdn.rohit.build/oss/grimoire/logo.png" alt="Grimoire" style="width: 30%; margin: auto" />
+</div>
+
+<br />
 
 <div align="center">
   <p align="center" style="width: 80%; margin: auto">
@@ -13,7 +15,7 @@
 </div>
 
 <div align="center">
-  ✨ An opinionated <strong>book of spells</strong> for modern developers ✨
+  <p>✨ An opinionated <strong>book of spells</strong> for modern developers ✨</p>
 </div>
 
 <br />
@@ -74,13 +76,14 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 * Fast and disk-efficient dependency management using [pnpm][]
 * Type-safety using [typescript][]
 * Code linting and formatting with [biome][]
-* Version management and package publishing to [npm][] using [semantic release][semantic-release]
+* Automated changelog generation using [git-cliff][]
+* Tag-driven releases with version management and package publishing to [npm][]
 
 [vitest]: https://vitest.dev/
 [commitlint]: https://github.com/marionebl/commitlint
 [husky]: https://github.com/typicode/husky
 [biome]: https://biomejs.dev/
-[semantic-release]: https://github.com/semantic-release/semantic-release
+[git-cliff]: https://git-cliff.org/
 [typescript]: https://github.com/microsoft/TypeScript
 [node]: https://nodejs.org
 [bun]: https://bun.sh/
@@ -134,17 +137,7 @@ The details for summon command and the list of supported resources are provided 
 > [!IMPORTANT]
 > Some workflows in the generated projects require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
 
-`grimoire` enforces an opinionated branching strategy for stress-free delivery regardless of language or project type.
-
-**Branches**
-
-The following two branches are essential to the workflow and must be protected _(you can import [this ruleset](https://gist.github.com/agrawal-rohit/5d05d1ab395dec3b73d6db6adc87838e) in your Github project to enforce this)_:
-
-- `main`: Latest development branch. All feature branches merge here.
-- `release/vX.Y.Z`: Cut from `main` for a specific version (for example, `release/v1.2.3`). Use this branch for all patch fixes for that release.
-
-For detailed information about the release process, including how to create release candidates and promote them to production, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
-
+`grimoire` uses a simple tag-driven release workflow for stress-free delivery (This same workflow is configured for projects summoned with `grimoire`). See the [Release Process](#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ### Examples
 

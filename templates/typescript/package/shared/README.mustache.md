@@ -1,6 +1,6 @@
-<h1 align="center">
-    {{ name }}
-</h1>
+<div align="center">
+  <h1>{{ name }}</h1>
+</div>
 
 <div align="center">
   <p align="center" style="width: 80%; margin: auto">

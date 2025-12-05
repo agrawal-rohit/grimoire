@@ -22,7 +22,7 @@ export const templatePublicPaths: Record<Language | "shared", string[]> = {
 		"issue_template",
 		"pull_request_template.md",
 	],
-	[Language.TYPESCRIPT]: ["release.config.cjs"],
+	[Language.TYPESCRIPT]: ["release.mustache.yml"],
 };
 
 /** Describes the configuration for summoning a package. */

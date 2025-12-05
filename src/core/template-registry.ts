@@ -81,7 +81,7 @@ async function listChildDirs(dir: string): Promise<string[]> {
  */
 function buildContentsURL(language: string, resource?: string): string {
 	const subpath = ["templates", language, resource].filter(Boolean).join("/");
-	return `https://api.github.com/repos/${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}/contents/${subpath}?ref=next`;
+	return `https://api.github.com/repos/${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}/contents/${subpath}`;
 }
 
 /**

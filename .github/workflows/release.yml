@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Parse version and release type
+        id: parse
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Determine if this is a prerelease and what kind
+          if [[ "$VERSION" =~ -rc\. ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=rc" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" =~ -beta\. ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=beta" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" =~ -alpha\. ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=alpha" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync version in package.json
+        run: |
+          npm version --no-git-tag-version "${{ steps.parse.outputs.version }}"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          pnpm publish --access public --no-git-checks --tag ${{ steps.parse.outputs.npm_tag }}
+
+      - name: Generate changelog
+        run: |
+          pnpm exec git-cliff --tag ${{ steps.parse.outputs.tag }} --output CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.parse.outputs.tag }}
+          name: ${{ steps.parse.outputs.tag }}
+          body_path: CHANGELOG.md
+          prerelease: ${{ steps.parse.outputs.prerelease }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update main branch to latest stable
+        if: steps.parse.outputs.prerelease == 'false'
+        run: |
+          # Only update main if this is a stable release
+          # Get the commit SHA for this tag
+          TAG_SHA=$(git rev-parse ${{ steps.parse.outputs.tag }})
+
+          # Get the current main branch SHA
+          MAIN_SHA=$(git rev-parse origin/main)
+
+          # Check if main is an ancestor of this tag (i.e., tag is ahead of main)
+          # If main is NOT an ancestor, skip update (prevent rewind)
+          if ! git merge-base --is-ancestor "$MAIN_SHA" "$TAG_SHA"; then
+            echo "Tag ${{ steps.parse.outputs.tag }} is not ahead of main branch. Skipping main update to prevent rewind."
+            exit 0
+          fi
+
+          # Update main to this tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push origin ${{ steps.parse.outputs.tag }}:refs/heads/main --force
+
+          echo "Updated main branch to ${{ steps.parse.outputs.tag }}"

@@ -87,17 +87,54 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 ## Release Process
 
-Releases are automated through our CI system:
+This project uses a dead-simple, tag-driven release workflow—push a tag, CI does the rest.
 
-1. **Development**: All changes happen on `main`
-2. **Release Candidates**: Cut `release/vX.Y.Z` branches from `main`
-   - Each commit creates RC tags (`vX.Y.Z-rc.1`, `vX.Y.Z-rc.2`, etc.)
-   - [GitHub Pre-release](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) are automatically created
-3. **Production Release**: Create a GitHub Release with tag `vX.Y.Z` _(not marked as prerelease)_
-   - CI will promote to production distribution channels
-   - The `vX.Y.Z` tag is permanently associated with the release
+### How It Works
 
-**Do not** manually bump versions or create release tags.
+All development happens on `main`. When you're ready to release, just push a semver tag. The tag format determines what gets published:
+
+- **Stable releases** (`v1.2.3`) → Published to npm with the `latest` tag
+- **Release candidates** (`v1.2.3-rc.1`) → Published with the `rc` tag  
+- **Beta releases** (`v1.2.3-beta.1`) → Published with the `beta` tag
+- **Alpha releases** (`v1.2.3-alpha.1`) → Published with the `alpha` tag
+
+That's it. No version bump commits, no release branches, no manual changelog updates.
+
+### Creating a Release
+
+Ensure `main` is ready, then push a tag:
+
+**For a stable release:**
+```bash
+git checkout main
+git pull origin main
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+**For a pre-release (RC, beta, or alpha):**
+```bash
+git tag v1.2.3-rc.1    # or -beta.1, -alpha.1
+git push origin v1.2.3-rc.1
+```
+
+### What Happens Automatically
+
+When you push a tag, the release workflow kicks in and:
+
+1. Syncs the version in `package.json`
+2. Installs dependencies and builds the package
+3. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
+4. Generates a changelog from your conventional commits using git-cliff
+5. Creates a GitHub Release with the changelog attached
+
+All of this happens automatically. You just push the tag.
+
+### Things to Remember
+
+- Keep `package.json` version at `0.0.0` in the repo — never bump it manually
+- Don't commit version changes — CI handles that during release
+- Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
 
 ## Dependencies
 
@@ -110,19 +147,17 @@ Releases are automated through our CI system:
 
 - **Do not** report security vulnerabilities in public issues
 - Use GitHub's [private vulnerability reporting](https://github.com/{{ authorGitUsername }}/{{ name }}/security/advisories)
-- We'll acknowledge reports within 48 hours and work on a fix
 
 ## Maintainer Guidelines
 
 Some guidelines for maintainers:
 
-- Use pull requests for all changes (avoid pushing directly to `main`)
-- Release branches must strictly match `release/v<major>.<minor>.<patch>` (e.g., `release/v1.2.3`)
-- Pre-release tags use `vX.Y.Z-rc.N`; production tags must be `vX.Y.Z`
-- Production GitHub Releases must not be marked as prereleases
-- Keep required checks and branch protection enabled on `main` and `release/v*` branches
+- Use pull requests for all changes to `main`
+- Tag format must adhere to semver standards: `vX.Y.Z` for stable releases and `vX.Y.Z-rc.N`, `-beta.N`, `-alpha.N` for pre-releases
+- Only push release tags when ready — tags trigger the full release pipeline
+- Keep required checks and branch protection enabled on `main` branch
 - Avoid modifying automation without discussion:
-  - Configuration files (`biome.json`, `commitlint.config.js`, etc.)
+  - Configuration files (`cliff.toml`, `biome.json`, etc.)
   - CI workflows (`.github/workflows/*`)
   - Release tooling
 

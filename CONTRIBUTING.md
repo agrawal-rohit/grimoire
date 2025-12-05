@@ -30,7 +30,7 @@ Please be specific about your environment and include steps to reproduce issues 
 1. Fork the repository
 2. Install dependencies: `pnpm install`
 3. Create a local build: `pnpm pack`
-4. Test the package locally: `npx ./grimoire-*.tgz`
+4. Test the package locally: `npx <path-to-local-build>.tgz`
 
 The project uses:
 - **Node.js** v20+ for runtime
@@ -89,17 +89,80 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 ## Release Process
 
-Releases are automated through our CI system:
+`grimoire` uses a simple tag-driven release workflow - push a tag at the time of release and the [Github Actions](https://github.com/features/actions) takes care of the rest. This same workflow is configured for projects scaffolded with `grimoire`, so understanding how it's set up is important for both contributors and users.
 
-1. **Development**: All changes happen on `main`
-2. **Release Candidates**: Cut `release/vX.Y.Z` branches from `main`
-   - Each commit creates RC tags (`vX.Y.Z-rc.1`, `vX.Y.Z-rc.2`, etc.)
-   - [GitHub Pre-release](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) are automatically created
-3. **Production Release**: Create a GitHub Release with tag `vX.Y.Z` _(not marked as prerelease)_
-   - CI will promote to production distribution channels
-   - The `vX.Y.Z` tag is permanently associated with the release
+### How It Works
 
-**Do not** manually bump versions or create release tags.
+All development happens on `main`. When you're ready to release, just push a semver tag. The tag format determines what gets published:
+
+- **Stable releases** (`v1.2.3`) → Published to npm with the `latest` tag
+- **Release candidates** (`v1.2.3-rc.1`) → Published with the `rc` tag
+- **Beta releases** (`v1.2.3-beta.1`) → Published with the `beta` tag
+- **Alpha releases** (`v1.2.3-alpha.1`) → Published with the `alpha` tag
+
+That's it. No version bump commits, no release branches, no manual changelog updates.
+
+### Creating a Release
+
+Ensure `main` is ready, then push a tag:
+
+**For a stable release:**
+```bash
+git checkout main
+git pull origin main
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+**For a pre-release (RC, beta, or alpha):**
+```bash
+git tag v1.2.3-rc.1    # or -beta.1, -alpha.1
+git push origin v1.2.3-rc.1
+```
+
+### What Happens Automatically
+
+When you push a tag, the release workflow kicks in and:
+
+1. Syncs the version in `package.json`
+2. Installs dependencies and builds the package
+3. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
+4. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
+5. Creates a GitHub Release with the changelog attached
+
+All of this happens automatically. You just push the tag.
+
+### Testing Pre-releases
+
+After pushing a pre-release tag, you can test it before cutting a stable release:
+
+```bash
+# For grimoire itself
+npx grimoire@rc --help
+
+# For your scaffolded projects
+npm install my-package@rc
+```
+
+Found a bug? Fix it on `main` and push a new pre-release tag (e.g., `v1.2.3-rc.2`). Rinse and repeat until it's solid.
+
+### Promoting to Stable
+
+Once a pre-release has been tested and you're confident it's ready:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+CI will publish it to npm as the stable `latest` version. Done.
+
+### Things to Remember
+
+- Keep `package.json` version at `0.0.0` in the repo — never bump it manually
+- Don't commit version changes — CI handles that during release
+- Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
+- Tags are immutable once pushed
 
 ## Dependencies
 
@@ -124,7 +187,7 @@ templates/
 │       └── {template}/              # Specific template (e.g., default)
 ```
 
-Files are copied in this order (later files override earlier ones):
+Files are copied in this order (files with the same name are overriden based on the copy order):
 1. `templates/shared` (global)
 2. `templates/{language}/shared` (language-specific)
 3. `templates/{language}/{resource}/shared` (resource-specific)
@@ -132,7 +195,7 @@ Files are copied in this order (later files override earlier ones):
 
 ### Template Files
 
-- Use `.mustache` extension for templated files (e.g., `package.json.mustache`)
+- Use `.mustache` extension for templated files (e.g., `package.mustache.json`)
 - Use mustache syntax for variables: `{{ variableName }}`
 - The `summon` configuration is passed as the mustache context
 - Non-mustache files are copied as-is
@@ -150,19 +213,17 @@ When proposing a new template:
 
 - **Do not** report security vulnerabilities in public issues
 - Use GitHub's [private vulnerability reporting](https://github.com/agrawal-rohit/grimoire/security/advisories)
-- We'll acknowledge reports within 48 hours and work on a fix
 
 ## Maintainer Guidelines
 
 Some guidelines for maintainers:
 
-- Use pull requests for all changes (avoid pushing directly to `main`)
-- Release branches must strictly match `release/v<major>.<minor>.<patch>` (e.g., `release/v1.2.3`)
-- Pre-release tags use `vX.Y.Z-rc.N`; production tags must be `vX.Y.Z`
-- Production GitHub Releases must not be marked as prereleases
-- Keep required checks and branch protection enabled on `main` and `release/v*` branches
+- Use pull requests for all changes to `main`
+- Tag format must adhere to semver standards: `vX.Y.Z` for stable releases and `vX.Y.Z-rc.N`, `-beta.N`, `-alpha.N` for pre-releases
+- Only push release tags when ready — tags trigger the full release pipeline
+- Keep required checks and branch protection enabled on `main` branch
 - Avoid modifying automation without discussion:
-  - Configuration files (`release.config.cjs`, `biome.json`, etc.)
+  - Configuration files (`cliff.toml`, `biome.json`, etc.)
   - CI workflows (`.github/workflows/*`)
   - Release tooling
 

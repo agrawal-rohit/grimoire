@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Keep GitHub Actions current on main (production)
+  # Keep GitHub Actions current on main (trunk)
   - package-ecosystem: github-actions
     directory: /
     target-branch: main
@@ -17,27 +17,10 @@ updates:
       prefix: "ci"
       include: scope
 
-  # Keep GitHub Actions current on next (development)
-  - package-ecosystem: github-actions
-    directory: /
-    target-branch: next
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Asia/Kolkata
-    open-pull-requests-limit: 5
-    labels:
-      - dependencies
-      - github-actions
-    commit-message:
-      prefix: "ci"
-      include: scope
-
-  # pnpm dependency updates flow into next (development)
+  # pnpm dependency updates flow into main (trunk)
   - package-ecosystem: npm
     directory: /
-    target-branch: next
+    target-branch: main
     schedule:
       interval: weekly
       day: monday
@@ -71,10 +54,9 @@ updates:
           - "@commitlint/*"
           - "husky"
           - "lint-staged"
-      semantic-release:
+      git-cliff:
         patterns:
-          - "semantic-release*"
-          - "@semantic-release/*"
+          - "git-cliff"
       biome:
         patterns:
           - "@biomejs/*"

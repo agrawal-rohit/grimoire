@@ -51,19 +51,3 @@ jobs:
 
       - name: Run tests with coverage
         run: pnpm cov
-
-      - name: Check coverage file
-        id: cov
-        run: |
-          if [ -s ./coverage/lcov.info ]; then
-            echo "nonempty=true" >> $GITHUB_OUTPUT
-          else
-            echo "nonempty=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload coverage to Codacy
-        if: steps.cov.outputs.nonempty == 'true'
-        uses: codacy/codacy-coverage-reporter-action@1.0.0
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./coverage/lcov.info
