@@ -30,7 +30,7 @@ I found myself spending a criminal amount of time configuring every new library,
 
 * [Features](#features)
 * [Supported Languages](#supported-languages)
-  * [Javascript](#javascript)
+  * [Typescript](#typescript)
 * [Usage](#usage)
   * [Requirements](#requirements)
   * [Quickstart](#quickstart)
@@ -52,7 +52,7 @@ I found myself spending a criminal amount of time configuring every new library,
 * Automatically generated Readme with badges through [shields.io][shields]
 * Automatically generated MIT license with [spdx][spdx-license-list]
 * Automatically generated community files _(contribution guidelines, issue templates, and pull request checklists)_
-* A pre-configured [branching setup and release process](#branching-setup-and-release-workflow) for preview and production releases
+* A pre-configured [release process](#CONTRIBUTING.md#release-process) for preview and production releases
 * Sensible [templates][] for common use cases encountered in modern development
 
 [github-actions]: https://github.com/features/actions
@@ -65,7 +65,7 @@ I found myself spending a criminal amount of time configuring every new library,
 
 In addition to the general tooling listed above, `grimoire` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
 
-### Javascript
+### Typescript
 
 Great choice when building for the web _(UI libraries and frameworks for the browser. Can also be a good server-side language when executed in a JS runtime like [node][], [bun][], or [deno][])_.
 
@@ -137,7 +137,7 @@ The details for summon command and the list of supported resources are provided 
 > [!IMPORTANT]
 > Some workflows in the generated projects require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
 
-`grimoire` uses a simple tag-driven release workflow for stress-free delivery (This same workflow is configured for projects summoned with `grimoire`). See the [Release Process](#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+`grimoire` uses a simple tag-driven release workflow for stress-free delivery (This same workflow is configured for projects summoned with `grimoire`). See the [release process](CONTRIBUTING.md#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ### Examples
 
