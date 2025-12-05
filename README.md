@@ -94,7 +94,7 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 [npx]: https://www.npmjs.com/package/npx
 
 > [!NOTE]
-> Python support coming soon
+> Support for other languages is still in the works
 
 ## Usage
 
@@ -200,9 +200,8 @@ If you create a project with grimoire, you can show support by adding this badge
 
 ![Made with Grimoire](https://img.shields.io/badge/made_with-grimoire-7452A3)
 
-Copy and paste this Markdown snippet:
-```md
-![Made with Grimoire](https://img.shields.io/badge/made_with-grimoire-7452A3)
+```html
+<a href="https://github.com/agrawal-rohit/grimoire"><img alt="Made with Grimoire" src="https://img.shields.io/badge/made_with-grimoire-7452A3"></a>
 ```
 
 ## License
