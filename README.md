@@ -20,6 +20,12 @@
 
 <br />
 
+<div align="center">
+    <img src="https://cdn.rohit.build/oss/grimoire/preview.gif" alt="Grimoire Preview" style="margin: auto" />
+</div>
+
+<br /><br />
+
 `grimoire` is a CLI tool that takes care of the common [yak-shaving](https://softwareengineering.stackexchange.com/a/388236) operations in modern software development through opinionated templates and tooling configurations. Building something with code is nothing short of magic, `grimoire` is essentially my personal book of magic spells _(I used to be a try-hard [Wizard101](https://www.wizard101.com/) player back in the day, which should explain all the magic metaphors)_
 
 **Why build `grimoire`?**
