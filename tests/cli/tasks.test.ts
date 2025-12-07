@@ -1,10 +1,25 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Create mock for newListr
+const mockNewListr = vi.fn(() => ({}))
+
 // Mock listr2 before imports - create mock functions inside factory
 vi.mock('listr2', () => ({
-  Listr: vi.fn(() => ({
-    run: vi.fn(() => Promise.resolve())
-  }))
+  Listr: vi.fn((tasks) => {
+    // Store tasks for inspection
+    return {
+      run: vi.fn(async () => {
+        // Execute the task function to improve coverage
+        if (tasks && tasks[0] && tasks[0].task) {
+          const mockTask = {
+            newListr: vi.fn(() => ({}))
+          }
+          await tasks[0].task({}, mockTask)
+        }
+      }),
+      _tasks: tasks
+    }
+  })
 }))
 
 // Mock chalk
@@ -99,6 +114,7 @@ describe('tasks', () => {
 
       await runWithTasks('Test Goal', mockTask)
 
+      expect(mockTask).toHaveBeenCalled()
       const listrInstance = vi.mocked(Listr).mock.results[0].value
       expect(listrInstance.run).toHaveBeenCalled()
     })
@@ -163,6 +179,88 @@ describe('tasks', () => {
 
       const listrArgs = vi.mocked(Listr).mock.calls[0]
       expect(listrArgs[0][0].title).toBe(goalTitle)
+    })
+
+    test('should map subtasks and format titles with grey', async () => {
+      const subtask1 = vi.fn(async () => {})
+      const subtask2 = vi.fn(async () => {})
+
+      const subtasks = [
+        { title: 'Subtask 1', task: subtask1 },
+        { title: 'Subtask 2', task: subtask2 }
+      ]
+
+      await runWithTasks('Test Goal', undefined, subtasks)
+
+      // Verify chalk.grey was called for subtask titles (mapping happens during task execution)
+      expect(chalk.grey).toHaveBeenCalledWith('Subtask 1')
+      expect(chalk.grey).toHaveBeenCalledWith('Subtask 2')
+    })
+
+    test('should execute subtasks when newListr is called', async () => {
+      const subtask1 = vi.fn(async () => {})
+      const subtask2 = vi.fn(async () => {})
+      const subtasks = [
+        { title: 'Subtask 1', task: subtask1 },
+        { title: 'Subtask 2', task: subtask2 }
+      ]
+
+      // Mock Listr to actually execute subtasks
+      vi.mocked(Listr).mockImplementationOnce((tasks) => ({
+        run: vi.fn(async () => {
+          if (tasks && tasks[0] && tasks[0].task) {
+            const mockTaskWrapper = {
+              newListr: vi.fn((subTasks) => {
+                // Execute each subtask to cover lines 63-64
+                subTasks.forEach(async (subTask: any) => {
+                  if (subTask.task) {
+                    await subTask.task()
+                  }
+                })
+                return {}
+              })
+            }
+            await tasks[0].task({}, mockTaskWrapper)
+          }
+        })
+      }) as any)
+
+      await runWithTasks('Test Goal', undefined, subtasks)
+
+      // Verify subtasks were executed
+      expect(subtask1).toHaveBeenCalled()
+      expect(subtask2).toHaveBeenCalled()
+    })
+
+    test('should call newListr with subtasks and rendererOptions', async () => {
+      const subtask = vi.fn(async () => {})
+      const subtasks = [{ title: 'Test', task: subtask }]
+
+      await runWithTasks('Goal', undefined, subtasks, { collapseErrors: false })
+
+      // Get the task function that was passed to Listr
+      const listrArgs = vi.mocked(Listr).mock.calls[0]
+      const taskConfig = listrArgs[0][0]
+
+      // Execute the task function to trigger newListr
+      const mockTaskWrapper = {
+        newListr: vi.fn()
+      }
+      await taskConfig.task({}, mockTaskWrapper)
+
+      // Verify newListr was called with correct options
+      expect(mockTaskWrapper.newListr).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Test'
+          })
+        ]),
+        expect.objectContaining({
+          rendererOptions: {
+            collapseErrors: false
+          }
+        })
+      )
     })
   })
 

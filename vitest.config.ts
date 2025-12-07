@@ -9,6 +9,7 @@ export default defineConfig({
     // Preserve Vitest's default excludes (already includes node_modules, etc.)
     exclude: [...configDefaults.exclude, "templates/**"],
     coverage: {
+      reporter: ['text', 'lcov', 'html'],
       exclude: [...(configDefaults.coverage.exclude || []), "templates/**", "**/commitlint.config.js", "**/lint-staged.config.js"],
     },
   },
