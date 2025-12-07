@@ -19,7 +19,7 @@ vi.mock('../../src/cli/logger', () => ({
   }
 }))
 
-describe('prompts', () => {
+describe('cli/prompts', () => {
   let processExitSpy: any
 
   beforeEach(() => {

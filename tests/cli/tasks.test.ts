@@ -35,7 +35,7 @@ import tasks from '../../src/cli/tasks'
 import { Listr } from 'listr2'
 import chalk from 'chalk'
 
-describe('tasks', () => {
+describe('cli/tasks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })

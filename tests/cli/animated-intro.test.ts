@@ -39,11 +39,10 @@ vi.mock('../../core/utils', () => ({
 }))
 
 import animatedIntro from '../../src/cli/animated-intro'
-import { sleep, truncate } from '../../src/core/utils'
 import readline from 'node:readline'
 import { stripAnsi } from 'consola/utils'
 
-describe('animatedIntro', () => {
+describe('cli/animated-intro', () => {
   let mockStdout: any
   let mockStdin: any
   let processExitSpy: any

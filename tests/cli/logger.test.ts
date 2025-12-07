@@ -8,7 +8,7 @@ vi.mock('../../src/cli/animated-intro', () => ({
   default: vi.fn()
 }))
 
-describe('Logger', () => {
+describe('cli/logger', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>
   let processExitSpy: any
