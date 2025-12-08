@@ -10,7 +10,7 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "templates/**"],
     coverage: {
       reporter: ['text', 'lcov', 'html'],
-      exclude: [...(configDefaults.coverage.exclude || []), "templates/**", "**/commitlint.config.js", "**/lint-staged.config.js"],
+      exclude: [...(configDefaults.coverage.exclude || []), "templates/**", "**/commitlint.config.js", "**/lint-staged.config.js", "bin/**"],
     },
   },
 })
