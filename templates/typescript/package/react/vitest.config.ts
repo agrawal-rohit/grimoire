@@ -5,7 +5,7 @@ export default defineConfig({
 		environment: "happy-dom",
 		globals: true,
 		setupFiles: "./tests/setup.ts",
-		exclude: [...configDefaults.exclude],
+		exclude: [...configDefaults.exclude, "**/.stryker-tmp/**"],
 		coverage: {
 			reporter: ["text", "lcov", "html"],
 			exclude: [
@@ -13,6 +13,7 @@ export default defineConfig({
 				"**/commitlint.config.js",
 				"**/lint-staged.config.js",
 				"**/tsdown.config.ts",
+				"**/stryker.config.mjs",
 				"**/playground/**"
 			],
 		},

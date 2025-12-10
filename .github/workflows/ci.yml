@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   build-and-test:
@@ -62,6 +63,10 @@ jobs:
           sed -i 's/sonar.projectVersion=/sonar.projectVersion=0.0.1/' sonar-project.properties
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b update-sonar-version
           git add sonar-project.properties
-          git commit -m "chore(release): update SonarQube project version [skip ci]"
-          git push
+          git commit -m "chore: update SonarQube project version"
+          git push origin update-sonar-version
+          gh pr create --title "Update SonarQube project version" --body "Automated update of SonarQube project version." --base main --head update-sonar-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

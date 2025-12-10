@@ -4,10 +4,10 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    exclude: [...configDefaults.exclude],
+    exclude: [...configDefaults.exclude, "**/.stryker-tmp/**"],
     coverage: {
       reporter: ['text', 'lcov', 'html'],
-      exclude: [...(configDefaults.coverage.exclude || []), "**/commitlint.config.js", "**/lint-staged.config.js", "**/tsdown.config.ts"],
+      exclude: [...(configDefaults.coverage.exclude || []), "**/commitlint.config.js", "**/lint-staged.config.js", "**/tsdown.config.ts", "**/stryker.config.mjs"],
     },
   },
 })
