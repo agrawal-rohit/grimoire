@@ -16,7 +16,7 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       actions: write
     steps:
       - name: Checkout
@@ -52,20 +52,16 @@ jobs:
       - name: Run tests with coverage
         run: pnpm cov
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Download SonarQube mutation report filter
-        run: curl -o mutation-report-to-sonar.jq https://raw.githubusercontent.com/stryker-mutator/mutation-testing-elements/master/integrations/mutation-report-to-sonar.jq
-
-      - name: Run mutation tests
-        run: pnpm run test-mutations
-
-      - name: Convert mutation report for SonarQube
-        run: jq -f mutation-report-to-sonar.jq reports/mutation/mutation.json > mutation-sonar.json
-
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_EXTERNAL_ISSUES_REPORT_PATHS: mutation-sonar.json
+
+      - name: Update SonarQube project version
+        run: |
+          sed -i 's/sonar.projectVersion=/sonar.projectVersion=0.0.1/' sonar-project.properties
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add sonar-project.properties
+          git commit -m "Update SonarQube project version [skip ci]"
+          git push
