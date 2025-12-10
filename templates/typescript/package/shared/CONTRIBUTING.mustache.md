@@ -28,11 +28,9 @@ Please be specific about your environment and include steps to reproduce issues 
 
 1. Fork the repository
 2. Install dependencies: `pnpm install`
-{{#templateHasPlayground}}
-3. Start the local playground: `pnpm dev`
-{{/templateHasPlayground}}
-{{^templateHasPlayground}}
 3. Start development (watch): `pnpm dev`
+{{#templateHasPlayground}}
+3. Start the local playground: `pnpm playground`
 {{/templateHasPlayground}}
 4. Run the test suite: `pnpm test`
 5. Build the library: `pnpm build`

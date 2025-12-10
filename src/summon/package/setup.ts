@@ -4,6 +4,7 @@ import mitLicense from "spdx-license-list/licenses/MIT.json";
 import {
 	copyDirSafeAsync,
 	ensureDirAsync,
+	isDirAsync,
 	removeFilesByBasename,
 	renderMustacheTemplates,
 	writeFileAsync,
@@ -40,9 +41,16 @@ export async function applyTemplateModifications(
 	summonConfig: SummonPackageConfiguration,
 	packageManagerVersion: string,
 ): Promise<void> {
+	const chosenTemplateDir = await resolveTemplatesDir(
+		summonConfig.lang,
+		`package/${summonConfig.template}`,
+	);
+	const hasPlayground = await isDirAsync(
+		path.join(chosenTemplateDir, "playground"),
+	);
 	const templateMetadata = {
 		packageManagerVersion,
-		templateHasPlayground: summonConfig.template !== "default",
+		templateHasPlayground: hasPlayground,
 		...summonConfig,
 	};
 

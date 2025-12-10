@@ -29,7 +29,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "pnpm exec biome lint --write",
 		"format": "pnpm exec biome format --write",
-		"check": "pnpm run typecheck && pnpm exec biome check --write",
+		"check": "pnpm run typecheck && pnpm exec biome check --write"
   },
   "devDependencies": {
 		"husky": "^9.1.7",

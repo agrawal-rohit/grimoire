@@ -81,6 +81,7 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 * Pre-configured package bundling using [tsdown][]
 * Fast and disk-efficient dependency management using [pnpm][]
 * Type-safety using [typescript][]
+* Rapid utility-first styling and theme management using [tailwindcss][]
 * Code linting and formatting with [biome][]
 * Automated changelog generation using [git-cliff][]
 * Tag-driven releases with version management and package publishing to [npm][]
@@ -89,6 +90,7 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 [commitlint]: https://github.com/marionebl/commitlint
 [husky]: https://github.com/typicode/husky
 [biome]: https://biomejs.dev/
+[tailwindcss]: https://tailwindcss.com/
 [git-cliff]: https://git-cliff.org/
 [typescript]: https://github.com/microsoft/TypeScript
 [node]: https://nodejs.org

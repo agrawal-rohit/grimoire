@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { isDirAsync } from "../../../src/core/fs";
+
 
 // Mock node modules and internal modules
 vi.mock("node:fs", () => ({
@@ -23,9 +25,14 @@ vi.mock("../../../src/core/constants", () => ({
 vi.mock("../../../src/core/fs", () => ({
 	copyDirSafeAsync: vi.fn(),
 	ensureDirAsync: vi.fn(),
+	isDirAsync: vi.fn(),
 	removeFilesByBasename: vi.fn(),
 	renderMustacheTemplates: vi.fn(),
 	writeFileAsync: vi.fn(),
+}));
+
+vi.mock("../../../src/core/template-registry", () => ({
+	resolveTemplatesDir: vi.fn(),
 }));
 
 vi.mock("../../../src/core/git", () => ({
@@ -125,6 +132,8 @@ describe("summon/package/setup", () => {
 				...summonConfig,
 			};
 
+			vi.mocked(resolveTemplatesDir).mockResolvedValue("/template/dir");
+			vi.mocked(isDirAsync).mockResolvedValue(true);
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 
 			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
@@ -142,6 +151,8 @@ describe("summon/package/setup", () => {
 			};
 			const packageManagerVersion = "pnpm@9.0.0";
 
+			vi.mocked(resolveTemplatesDir).mockResolvedValue("/template/dir");
+			vi.mocked(isDirAsync).mockResolvedValue(false);
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 			vi.mocked(removeFilesByBasename).mockResolvedValue();
 
@@ -166,6 +177,8 @@ describe("summon/package/setup", () => {
 			};
 			const packageManagerVersion = "pnpm@9.0.0";
 
+			vi.mocked(resolveTemplatesDir).mockResolvedValue("/template/dir");
+			vi.mocked(isDirAsync).mockResolvedValue(true);
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 
 			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
