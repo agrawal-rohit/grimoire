@@ -8,7 +8,6 @@
     {{#public}}
     <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/{{ authorGitUsername }}/{{ name }}/ci.yml">
     <img alt="Downloads" src="https://img.shields.io/npm/dt/{{ name }}">
-    <img alt="NPM bundle size" src="https://img.shields.io/bundlephobia/min/{{ name }}">
     {{/public}}
     <img alt="License" src="https://img.shields.io/github/license/{{ authorGitUsername }}/{{ name }}" />
   </p>
