@@ -176,9 +176,40 @@ describe("core/template-registry", () => {
           process.chdir(originalCwd);
         }
       });
-    });
 
-   	describe("remote", () => {
+      it("throws when templates directory does not exist and no resource", async () => {
+        setLocalModeEnv(true);
+        const { resolveTemplatesDir } = await importTemplateRegistry();
+        const projectRoot = makeTempDir("grimoire-project-");
+
+        const lang = "go";
+
+        // Do not create the templates directory
+
+        const originalCwd = process.cwd();
+        process.chdir(projectRoot);
+
+        try {
+          let error: unknown;
+          try {
+            await resolveTemplatesDir(lang);
+          } catch (e) {
+            error = e;
+          }
+
+          expect(error).toBeInstanceOf(Error);
+          if (error instanceof Error) {
+            expect(error.message).toContain("Local templates not found");
+            expect(error.message).toContain("<no local templates root>");
+            expect(error.message).toContain(`language "${lang}"`);
+            expect(error.message).not.toContain("resource");
+          }
+        } finally {
+          process.chdir(originalCwd);
+        }
+      });
+    });
+  describe("remote", () => {
   		beforeEach(() => {
   			setLocalModeEnv(false);
   			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
@@ -208,6 +239,28 @@ describe("core/template-registry", () => {
   			if (error instanceof Error) {
   				expect(error.message).toContain("Remote templates path does not exist");
   				expect(error.message).toContain("templates/nonexistent-lang/nonexistent-resource");
+  			}
+  		});
+
+  		it("surfaces a clear error when remote templates path without resource is definitely missing (404 from content probe)", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Simulate a 404 on the GitHub contents check.
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(
+  				new Response("Not Found", { status: 404 }),
+  			));
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("nonexistent-lang");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("Remote templates path does not exist");
+  				expect(error.message).toContain("templates/nonexistent-lang");
+  				expect(error.message).not.toContain("/nonexistent-lang/");
   			}
   		});
 
@@ -372,6 +425,42 @@ describe("core/template-registry", () => {
   			isDirAsyncSpy.mockRestore();
 		});
 
+		it("throws when downloaded directory does not exist and no resource", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Mock fetch to indicate the subtree exists
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+  				new Response(JSON.stringify([]), {
+  					status: 200,
+  					headers: { "Content-Type": "application/json" },
+  				}),
+  			));
+
+  			// Mock downloadTemplate to succeed
+  			const { downloadTemplate } = await import('giget');
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+
+  			// Mock isDirAsync to return false
+  			const fsModule = await import('../../src/core/fs');
+  			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
+  			isDirAsyncSpy.mockResolvedValue(false);
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("typescript");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("No remote templates found");
+  				expect(error.message).toContain(`language "typescript"`);
+  				expect(error.message).not.toContain("resource");
+  			}
+
+  			isDirAsyncSpy.mockRestore();
+		});
+
 		it("throws when remote templates path returns invalid json", async () => {
 			const { resolveTemplatesDir } = await importTemplateRegistry();
 			// Mock fetch to return invalid json
@@ -513,6 +602,38 @@ describe("core/template-registry", () => {
   			fs.mkdirSync(resourceDir, { recursive: true });
   			// Add a file but no subdirectories
   			fs.writeFileSync(path.join(resourceDir, "readme.md"), "# Readme");
+
+  			const originalCwd = process.cwd();
+  			process.chdir(projectRoot);
+
+  			try {
+  				const result = await listAvailableTemplates(lang, resource);
+  				expect(result).toEqual([]);
+  			} finally {
+  				process.chdir(originalCwd);
+  			}
+  		});
+
+  		it("returns an empty array when listChildDirs encounters a non-directory", async () => {
+  			setLocalModeEnv(true);
+  			const { listAvailableTemplates } = await importTemplateRegistry();
+  			const projectRoot = makeTempDir("grimoire-project-");
+  			const templatesRoot = path.join(projectRoot, "templates");
+  			const lang: Language = "typescript" as Language;
+  			const resource = "package";
+
+  			const resourceDir = path.join(templatesRoot, lang, resource);
+  			fs.mkdirSync(resourceDir, { recursive: true });
+
+  			// Spy on isDirAsync to return true for the first 3 calls, false for the 4th
+  			const fsModule = await import("../../src/core/fs");
+  			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
+  			let callCount = 0;
+  			isDirAsyncSpy.mockImplementation(async (path) => {
+  				callCount++;
+  				if (callCount <= 3) return true;
+  				return false;
+  			});
 
   			const originalCwd = process.cwd();
   			process.chdir(projectRoot);
@@ -682,6 +803,34 @@ describe("core/template-registry", () => {
   			expect(error).toBeInstanceOf(Error);
   			if (error instanceof Error) {
   				expect(error.message).toContain("Failed to download templates");
+  			}
+  		});
+
+  		it("throws a descriptive error when remote download fails with non-Error", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Mock fetch to indicate the subtree exists
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+  				new Response(JSON.stringify([]), {
+  					status: 200,
+  					headers: { "Content-Type": "application/json" },
+  				}),
+  			));
+
+			// Mock downloadTemplate to throw a non-Error
+			const { downloadTemplate } = await import('giget');
+			vi.mocked(downloadTemplate).mockRejectedValue("Network failure");
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("typescript", "summon");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("Failed to download templates");
+  				expect(error.message).toContain("Network failure");
   			}
   		});
   	});

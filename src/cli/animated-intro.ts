@@ -103,9 +103,7 @@ export async function animatedIntro(
 			s + " ".repeat(Math.max(0, LEFT_WIDTH - stripAnsi(s).length));
 		const padRight = (s: string) =>
 			s + " ".repeat(Math.max(0, rightWidth - stripAnsi(s).length));
-		return left.map(
-			(row, i) => padLeft(row) + GAP + padRight(paddedRight[i] ?? ""),
-		);
+		return left.map((row, i) => padLeft(row) + GAP + padRight(paddedRight[i]));
 	}
 
 	for (let message of messages) {
@@ -162,10 +160,6 @@ function createFixedHeightRenderer(out: NodeJS.WriteStream, height: number) {
 	let initialized = false;
 	return {
 		paint(lines: string[]) {
-			if (lines.length < height)
-				lines = lines.concat(Array(height - lines.length).fill(""));
-			else if (lines.length > height) lines = lines.slice(0, height);
-
 			if (!initialized) {
 				for (let i = 0; i < height; i++) {
 					if (i) out.write("\n");

@@ -303,6 +303,44 @@ describe('cli/animated-intro', () => {
 
       expect(stdinSetRawModeSpy).toHaveBeenCalledWith(false)
     })
+
+    test('should not exit on Ctrl with non-C key', async () => {
+      let keypressHandler: Function | undefined
+
+      stdinOnSpy.mockImplementation((event: string, handler: Function) => {
+        if (event === 'keypress') {
+          keypressHandler = handler
+        }
+      })
+
+      animatedIntro('Test')
+
+      // Simulate Ctrl+D - ctrl true but name !== 'c'
+      keypressHandler?.('', { ctrl: true, name: 'd' })
+
+      // Should not call exit or cleanup
+      expect(processExitSpy).not.toHaveBeenCalled()
+      expect(stdinSetRawModeSpy).not.toHaveBeenCalledWith(false)
+    })
+
+    test('should handle other keypresses without cleanup or exit', async () => {
+      let keypressHandler: Function | undefined
+
+      stdinOnSpy.mockImplementation((event: string, handler: Function) => {
+        if (event === 'keypress') {
+          keypressHandler = handler
+        }
+      })
+
+      animatedIntro('Test')
+
+      // Simulate a key that doesn't match Ctrl+C or ESC
+      keypressHandler?.('', { name: 'a' })
+
+      // Should not call cleanup or exit
+      expect(stdinSetRawModeSpy).not.toHaveBeenCalledWith(false)
+      expect(processExitSpy).not.toHaveBeenCalled()
+    })
   })
 
   describe('edge cases', () => {
@@ -360,34 +398,13 @@ describe('cli/animated-intro', () => {
 
       expect(stdoutWriteSpy).toHaveBeenCalled()
     })
-
-    test('should handle more lines than renderer height', async () => {
-      // Mock to create scenario with more lines
-      const veryLongMessage = 'word '.repeat(10)
-
-      await animatedIntro(veryLongMessage, { frameDelayMs: 10 })
-
-      expect(stdoutWriteSpy).toHaveBeenCalled()
-    }, 10000)
-
-    test('should handle exactly renderer height lines', async () => {
-      await animatedIntro('Test message', { frameDelayMs: 10 })
-
-      expect(stdoutWriteSpy).toHaveBeenCalled()
-    })
   })
 
   describe('token truncation', () => {
     test('should truncate tokens longer than 5 characters in center5', async () => {
       // This tests line 81: raw.length > 5 branch (raw.slice(0, 5))
       // Mock stripAnsi to consistently return text > 5 chars
-      vi.mocked(stripAnsi).mockImplementation((text) => {
-        const str = text?.toString() || ''
-        // For random runes (single chars), return as-is
-        if (str.length <= 2) return str
-        // For everything else, return long text to trigger truncation
-        return 'LongTextOver5Chars'
-      })
+      vi.mocked(stripAnsi).mockImplementation(() => 'LongTextOver5Chars')
 
       await animatedIntro('Test', { frameDelayMs: 10 })
 
@@ -399,12 +416,7 @@ describe('cli/animated-intro', () => {
 
     test('should handle short tokens that do not need truncation', async () => {
       // Test the raw.length <= 5 branch (returns raw without slicing)
-      vi.mocked(stripAnsi).mockImplementation((text) => {
-        const str = text?.toString() || ''
-        // Return short strings
-        if (str.length > 3) return 'ABC'
-        return str
-      })
+      vi.mocked(stripAnsi).mockImplementation(() => 'ABC')
 
       await animatedIntro('X', { frameDelayMs: 10 })
 

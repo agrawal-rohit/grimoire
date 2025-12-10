@@ -167,6 +167,31 @@ describe("summon/package/setup", () => {
 			]);
 		});
 
+		it("should handle lang not in templatePublicPaths when removing public files", async () => {
+			const targetDir = "/path/to/package";
+			const summonConfig = {
+				lang: "javascript" as any,
+				name: "test-package",
+				template: "default",
+				public: false,
+			};
+			const packageManagerVersion = "pnpm@9.0.0";
+
+			vi.mocked(resolveTemplatesDir).mockResolvedValue("/template/dir");
+			vi.mocked(isDirAsync).mockResolvedValue(false);
+			vi.mocked(renderMustacheTemplates).mockResolvedValue();
+			vi.mocked(removeFilesByBasename).mockResolvedValue();
+
+			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
+
+			expect(removeFilesByBasename).toHaveBeenCalledWith(targetDir, [
+				"CODE_OF_CONDUCT.md",
+				"CONTRIBUTING.md",
+				"issue_template",
+				"pull_request_template.md",
+			]);
+		});
+
 		it("should not remove public files if package is public", async () => {
 			const targetDir = "/path/to/package";
 			const summonConfig = {
