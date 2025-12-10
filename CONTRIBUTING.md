@@ -124,8 +124,8 @@ When you push a tag, the release workflow kicks in and:
 
 1. Installs dependencies and builds the package
 2. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
-3. Generates a changelog from your conventional commits using [git-cliff](https://git-cliff.org/)
-4. Creates a GitHub Release with the changelog
+3. Creates a GitHub Release with a changelog generated from the conventional commits using [git-cliff](https://git-cliff.org/)
+4. Opens a pull request with the updated package version back into the `main` branch.
 
 ### Testing Pre-releases
 
