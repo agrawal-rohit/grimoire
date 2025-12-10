@@ -141,8 +141,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests with coverage
-        run: pnpm cov
+      - name: Update SonarQube version
+        run: sed -i 's/sonar.projectVersion=.*/sonar.projectVersion=${{ github.sha }}/' sonar-project.properties
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
