@@ -132,7 +132,7 @@ npx @agrawalrohit/grimoire@latest summon <resource>
 The details for summon command and the list of supported resources are provided in the [summoning command reference](#summon-resource).
 
 > [!IMPORTANT]
-> Some workflows in the generated projects require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
+> Some workflows in the generated projects may require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Additionally, ensure that "Allow GitHub Actions to create and approve pull requests" is checked in Settings → Actions → General. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
 
 `grimoire` uses a simple tag-driven release workflow for stress-free delivery (This same workflow is configured for projects summoned with `grimoire`). See the [release process](CONTRIBUTING.md#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 

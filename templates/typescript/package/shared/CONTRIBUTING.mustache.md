@@ -87,9 +87,14 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 This project uses a simple tag-driven release workflow powered by [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). Push a tag, and [Github Actions](https://github.com/features/actions) handles the rest.
 
+### Pre-requisites
+
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com (see repository settings for details)
+- Ensure that `"Allow GitHub Actions to create and approve pull requests"` is checked in your repository settings (Settings > Actions > General > Workflow permissions).
+
 ### How It Works
 
-All development happens on `main`. When you're ready to release, just push a semver tag. The tag format determines what gets published:
+All development happens on `main`. When you're ready to release, just push a [semver](https://semver.org/) tag. The tag format determines what gets published:
 
 - **Stable releases** (`v1.2.3`) → Published to npm with the `latest` tag
 - **Release candidates** (`v1.2.3-rc.1`) → Published with the `rc` tag  
@@ -122,13 +127,6 @@ When you push a tag, the release workflow kicks in and:
 2. Publishes to npm with the appropriate tag (`latest`, `rc`, `beta`, or `alpha`)
 3. Creates a GitHub Release with a changelog generated from the conventional commits using [git-cliff](https://git-cliff.org/)
 4. Opens a pull request with the updated package version back into the `main` branch.
-
-### Things to Remember
-
-- Keep `package.json` version at `0.0.0` in the repo — never bump it manually
-- Don't commit version changes — CI handles that during release
-- Tag format matters: `v1.2.3` for stable, `v1.2.3-rc.1` for pre-releases
-- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) must be configured on npmjs.com (see repository settings for details)
 
 ## Dependencies
 
