@@ -1,7 +1,11 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
 	"files": {
-		"includes": ["src/**/*.{js,ts,jsx,tsx,json,cjs,mjs,yaml,css}", "bin/**"]
+		"includes": [
+			"bin/**",
+			"!**/.stryker-tmp/*",
+			"src/**/*.{js,ts,jsx,tsx,json,cjs,mjs,yaml,css}"
+		]
 	},
 	"formatter": {
 		"enabled": true
