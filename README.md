@@ -7,7 +7,7 @@
 <div align="center">
   <p align="center" style="width: 80%; margin: auto">
     <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/agrawal-rohit/grimoire/ci.yml">
-    <img alt="Coverage" src="https://img.shields.io/codacy/coverage/039fa9ecca5d4927aace0faedc3e24bf">
+    <img alt="Sonar Coverage" src="https://img.shields.io/sonar/coverage/agrawal-rohit_grimoire?server=https%3A%2F%2Fsonarcloud.io">
     <img alt="Downloads" src="https://img.shields.io/npm/dt/@agrawalrohit/grimoire">
     <img alt="Biome" src="https://img.shields.io/badge/code_style-biome-60a5fa">
     <img alt="License" src="https://img.shields.io/github/license/agrawal-rohit/grimoire" />
@@ -75,7 +75,7 @@ In addition to the general tooling listed above, `grimoire` also configures lang
 
 Great choice when building for the web _(UI libraries and frameworks for the browser. Can also be a good server-side language when executed in a JS runtime like [node][], [bun][], or [deno][])_.
 
-* Unit testing with [vitest][]
+* Unit testing with [vitest][] and test quality checks using [stryker][]
 * Commit linting with [commitlint][]
 * Pre-commit checks with [husky][]
 * Pre-configured package bundling using [tsdown][]
@@ -87,6 +87,7 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 * Tag-driven releases with version management and package publishing to [npm][]
 
 [vitest]: https://vitest.dev/
+[stryker]: https://stryker-mutator.io/
 [commitlint]: https://github.com/marionebl/commitlint
 [husky]: https://github.com/typicode/husky
 [biome]: https://biomejs.dev/
