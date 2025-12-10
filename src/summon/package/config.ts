@@ -207,7 +207,7 @@ export async function getPackageVisibility(
 	const isPublic =
 		cliFlags.public ??
 		(await prompts.confirmInput(
-			`Would this be a public package (released to the ${packageRegistry} registry)`,
+			`Should this package be publicly available? (released to the ${packageRegistry} registry)`,
 			undefined,
 			true,
 		));
@@ -219,7 +219,7 @@ export async function getPackageVisibility(
 export async function promptAuthorName(): Promise<string> {
 	const gitName = await getGitUsername();
 	return await prompts.textInput(
-		"What's your name? (Will be used for communication and licensing)",
+		"What is the author's name?",
 		undefined,
 		gitName,
 	);
@@ -229,7 +229,7 @@ export async function promptAuthorName(): Promise<string> {
 export async function promptAuthorGitEmail(): Promise<string> {
 	const inferredGitEmail = await getGitEmail();
 	return await prompts.textInput(
-		"What's your email? (Will be used for communication)",
+		"What is the author's email?",
 		undefined,
 		inferredGitEmail,
 	);
@@ -243,7 +243,7 @@ export async function promptAuthorGitUsername(): Promise<string> {
 		: undefined;
 
 	const finalGitUserName = await prompts.textInput(
-		"What's your GitHub username? (Will be used for communication links and status badges)",
+		"Under which GitHub account would this repository be stored?",
 		undefined,
 		suggestedUsername,
 	);

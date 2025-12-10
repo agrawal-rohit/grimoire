@@ -3,10 +3,5 @@ import { defineConfig } from 'vitest/config'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  test: {
-    environment: 'happy-dom',
-    globals: true,
-    setupFiles: './tests/setup.ts',
-  },
+  plugins: [react(), tailwindcss()]
 })

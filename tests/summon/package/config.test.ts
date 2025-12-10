@@ -270,7 +270,7 @@ describe("summon/package/config", () => {
 			const result = await getPackageVisibility(Language.TYPESCRIPT, {});
 
 			expect(prompts.confirmInput).toHaveBeenCalledWith(
-				"Would this be a public package (released to the npm registry)",
+				"Should this package be publicly available? (released to the npm registry)",
 				undefined,
 				true,
 			);
@@ -287,7 +287,7 @@ describe("summon/package/config", () => {
 
 			expect(getGitUsername).toHaveBeenCalled();
 			expect(prompts.textInput).toHaveBeenCalledWith(
-				"What's your name? (Will be used for communication and licensing)",
+				"What is the author's name?",
 				undefined,
 				"John",
 			);
@@ -304,7 +304,7 @@ describe("summon/package/config", () => {
 
 			expect(getGitEmail).toHaveBeenCalled();
 			expect(prompts.textInput).toHaveBeenCalledWith(
-				"What's your email? (Will be used for communication)",
+				"What is the author's email?",
 				undefined,
 				"john@example.com",
 			);
@@ -322,7 +322,7 @@ describe("summon/package/config", () => {
 
 			expect(getGitUsername).toHaveBeenCalled();
 			expect(prompts.textInput).toHaveBeenCalledWith(
-				"What's your GitHub username? (Will be used for communication links and status badges)",
+				"Under which GitHub account would this repository be stored?",
 				undefined,
 				"johndoe",
 			);
@@ -339,7 +339,7 @@ describe("summon/package/config", () => {
 
 			expect(getGitUsername).toHaveBeenCalled();
 			expect(prompts.textInput).toHaveBeenCalledWith(
-				"What's your GitHub username? (Will be used for communication links and status badges)",
+				"Under which GitHub account would this repository be stored?",
 				undefined,
 				undefined,
 			);
