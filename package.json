@@ -1,5 +1,5 @@
 {
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"name": "@agrawalrohit/grimoire",
 	"description": "An opinionated book of spells for the modern developer",
 	"bin": "./bin/cli.js",
