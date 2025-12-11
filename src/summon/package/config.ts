@@ -239,7 +239,7 @@ export async function promptAuthorGitEmail(): Promise<string> {
 export async function promptAuthorGitUsername(): Promise<string> {
 	const gitName = await getGitUsername();
 	const suggestedUsername = gitName
-		? gitName.toLowerCase().replace(/\s+/g, "")
+		? gitName.toLowerCase().replaceAll(/\s+/g, "")
 		: undefined;
 
 	const finalGitUserName = await prompts.textInput(

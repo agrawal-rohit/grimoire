@@ -168,7 +168,7 @@ export async function renderMustacheTemplates(
 			// Preserve GitHub Actions expressions like ${{ secrets.X }} by masking them before rendering.
 			const ghExprPattern = /\$\{\{[\s\S]*?\}\}/g;
 			const ghExprs: string[] = [];
-			const masked = raw.replace(ghExprPattern, (m) => {
+			const masked = raw.replaceAll(ghExprPattern, (m) => {
 				const token = `__GH_EXPR_${ghExprs.length}__`;
 				ghExprs.push(m);
 				return token;
