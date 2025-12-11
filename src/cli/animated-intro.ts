@@ -71,6 +71,7 @@ export async function animatedIntro(
 	const COLORS = [chalk.cyan, chalk.red, chalk.yellow, chalk.green, chalk.blue];
 
 	function randomRune(): string {
+		// Math.random() is safe here as it's used for visual animation, not cryptographic purposes
 		const r = RUNES[Math.floor(Math.random() * RUNES.length)];
 		const c = COLORS[Math.floor(Math.random() * COLORS.length)];
 		return c(r);

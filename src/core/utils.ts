@@ -33,8 +33,8 @@ export function toSlug(value: string): string {
 	base = base.replaceAll(/-+/g, "-");
 
 	// Trim leading and trailing hyphens
-	base = base.replace(/^[-]+/, "");
-	base = base.replace(/[-]+$/, "");
+	base = base.replace(/^-+/, "");
+	base = base.replace(/-+$/, "");
 
 	return base;
 }

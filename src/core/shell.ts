@@ -22,8 +22,7 @@ function parseCommand(cmd: string): { command: string; args: string[] } {
 	let current = "";
 	let inQuotes = false;
 
-	for (let i = 0; i < cmd.length; i++) {
-		const char = cmd[i];
+	for (const char of cmd) {
 		if (char === '"' && !inQuotes) {
 			inQuotes = true;
 		} else if (char === '"' && inQuotes) {
