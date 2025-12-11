@@ -1,23 +1,42 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { runAsync, commandExistsAsync } from "../../src/core/shell";
-import { exec, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
+
+// Helper to test parseCommand indirectly through spawn calls
+function expectParsedCommand(cmd: string, expectedCommand: string, expectedArgs: string[]) {
+	const fakeChild = {
+		stdout: { on: vi.fn() },
+		on: vi.fn(),
+	};
+
+	(spawn as any).mockReturnValue(fakeChild);
+
+	fakeChild.on.mockImplementation((event: string, handler: (arg?: any) => void) => {
+		if (event === "close") handler(0);
+		return fakeChild;
+	});
+
+	fakeChild.stdout.on.mockImplementation((event: string, handler: (data: any) => void) => {
+		if (event === "data") handler("test output");
+	});
+
+	runAsync(cmd);
+
+	expect(spawn).toHaveBeenCalledWith(expectedCommand, expectedArgs, expect.any(Object));
+}
 
 vi.mock("node:child_process", () => {
 	return {
-		exec: vi.fn(),
 		spawn: vi.fn(),
 	};
 });
 
 describe("core/shell", () => {
-	let execMock: any;
 	let spawnMock: any;
 
 	beforeEach(() => {
-		execMock = exec as unknown as any;
 		spawnMock = spawn as unknown as any;
 
-		(execMock as any).mockReset();
 		(spawnMock as any).mockReset();
 	});
 
@@ -26,38 +45,61 @@ describe("core/shell", () => {
 	});
 
 	describe("runAsync", () => {
-		it("uses exec and resolves trimmed stdout when stdio is pipe (default)", async () => {
-			(execMock as any).mockImplementation(
-				(
-					cmd: string,
-					options: any,
-					callback: (err: any, stdout: any, stderr: any) => void,
-				) => {
-					expect(cmd).toBe("echo test");
-					callback(null, "  ok \n", "");
+		it("uses spawn and resolves trimmed stdout when stdio is pipe (default)", async () => {
+			const fakeChild = {
+				stdout: { on: vi.fn() },
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "close") {
+						handler(0);
+					}
+					return fakeChild;
+				},
+			);
+
+			(fakeChild.stdout.on as any).mockImplementation(
+				(event: string, handler: (data: any) => void) => {
+					if (event === "data") {
+						handler("  ok \n");
+					}
 				},
 			);
 
 			const result = await runAsync("echo test");
 
 			expect(result).toBe("ok");
-			expect(execMock).toHaveBeenCalledTimes(1);
+			expect(spawnMock).toHaveBeenCalledWith("echo", ["test"], expect.objectContaining({
+				stdio: ["ignore", "pipe", "pipe"],
+			}));
 		});
 
-		it("passes cwd, env, and timeoutMs to exec when stdio is pipe", async () => {
-			(execMock as any).mockImplementation(
-				(
-					cmd: string,
-					options: { cwd?: string; env?: any; timeout?: number },
-					callback: (err: any, stdout: any, stderr: any) => void,
-				) => {
-					expect(cmd).toBe("echo env");
-					expect(options.cwd).toBe("/tmp/project");
-					expect(options.timeout).toBe(1234);
-					expect(options.env).toMatchObject({
-						EXTRA: "1",
-					});
-					callback(null, "done", "");
+		it("passes cwd, env, and timeoutMs to spawn when stdio is pipe", async () => {
+			const fakeChild = {
+				stdout: { on: vi.fn() },
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "close") {
+						handler(0);
+					}
+					return fakeChild;
+				},
+			);
+
+			(fakeChild.stdout.on as any).mockImplementation(
+				(event: string, handler: (data: any) => void) => {
+					if (event === "data") {
+						handler("done");
+					}
 				},
 			);
 
@@ -69,21 +111,89 @@ describe("core/shell", () => {
 			});
 
 			expect(result).toBe("done");
+			expect(spawnMock).toHaveBeenCalledWith("echo", ["env"], expect.objectContaining({
+				cwd: "/tmp/project",
+				env: expect.objectContaining({ EXTRA: "1" }),
+				timeout: 1234,
+				stdio: ["ignore", "pipe", "pipe"],
+			}));
 		});
 
-		it("rejects when exec returns an error", async () => {
-			const error = new Error("exec failed");
-			(execMock as any).mockImplementation(
-				(
-					cmd: string,
-					options: any,
-					callback: (err: any, stdout: any, stderr: any) => void,
-				) => {
-					callback(error, "", "");
+		it("rejects when spawn emits an error", async () => {
+			const fakeChild = {
+				stdout: { on: vi.fn() },
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			const error = new Error("spawn failed");
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "error") {
+						handler(error);
+					}
+					return fakeChild;
 				},
 			);
 
 			await expect(runAsync("bad command")).rejects.toBe(error);
+		});
+
+		it("rejects when spawn exits with non-zero code for pipe stdio", async () => {
+			const fakeChild = {
+				stdout: { on: vi.fn() },
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "close") {
+						handler(1);
+					}
+					return fakeChild;
+				},
+			);
+
+			await expect(
+				runAsync("bad-pipe", { stdio: "pipe" }),
+			).rejects.toThrowError("Command failed: bad-pipe (exit 1)");
+		});
+
+		it("uses spawn and resolves trimmed stdout when stdio is ignore", async () => {
+			const fakeChild = {
+				stdout: { on: vi.fn() },
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "close") {
+						handler(0);
+					}
+					return fakeChild;
+				},
+			);
+
+			(fakeChild.stdout.on as any).mockImplementation(
+				(event: string, handler: (data: any) => void) => {
+					if (event === "data") {
+						handler("  ignored output \n");
+					}
+				},
+			);
+
+			const result = await runAsync("echo ignore", { stdio: "ignore" });
+
+			expect(result).toBe("ignored output");
+			expect(spawnMock).toHaveBeenCalledWith("echo", ["ignore"], expect.objectContaining({
+				stdio: ["ignore", "pipe", "pipe"],
+			}));
 		});
 
 		it("uses spawn and resolves empty string when stdio is inherit and exit code is 0", async () => {
@@ -110,30 +220,59 @@ describe("core/shell", () => {
 			const result = await runAsync("ls", { stdio: "inherit" });
 
 			expect(result).toBe("");
-			expect(spawnMock).toHaveBeenCalledWith("ls", {
+			expect(spawnMock).toHaveBeenCalledWith("ls", [], expect.objectContaining({
 				cwd: undefined,
 				env: expect.any(Object),
-				shell: true,
 				stdio: "inherit",
 				timeout: undefined,
-			});
+			}));
+		});
+
+		it("rejects when spawn exits with non-zero code for inherit stdio", async () => {
+			const fakeChild = {
+				on: vi.fn(),
+			};
+
+			(spawnMock as any).mockReturnValue(fakeChild);
+
+			(fakeChild.on as any).mockImplementation(
+				(event: string, handler: (arg?: any) => void) => {
+					if (event === "close") {
+						handler(1);
+					}
+					return fakeChild;
+				},
+			);
+
+			await expect(
+				runAsync("bad-inherit", { stdio: "inherit" }),
+			).rejects.toThrowError("Command failed: bad-inherit (exit 1)");
 		});
 
 		describe("commandExistsAsync", () => {
 			it("returns true when command exists on non-Windows (uses 'command -v')", async () => {
-				// Simulate a successful check on non-Windows by capturing the exec
-				(execMock as any).mockImplementation(
-					(
-						cmd: string,
-						options: any,
-						callback: (err: any, stdout: any, stderr: any) => void,
-					) => {
-						expect(cmd).toBe("command -v node");
-						expect(options).toMatchObject({
-							env: expect.any(Object),
-							timeout: undefined,
-						});
-						callback(null, "/usr/bin/node\n", "");
+				// Simulate a successful check on non-Windows by mocking spawn
+				const fakeChild = {
+					stdout: { on: vi.fn() },
+					on: vi.fn(),
+				};
+
+				(spawnMock as any).mockReturnValue(fakeChild);
+
+				(fakeChild.on as any).mockImplementation(
+					(event: string, handler: (arg?: any) => void) => {
+						if (event === "close") {
+							handler(0);
+						}
+						return fakeChild;
+					},
+				);
+
+				(fakeChild.stdout.on as any).mockImplementation(
+					(event: string, handler: (data: any) => void) => {
+						if (event === "data") {
+							handler("/usr/bin/node\n");
+						}
 					},
 				);
 
@@ -151,17 +290,33 @@ describe("core/shell", () => {
 				});
 
 				expect(result).toBe(true);
+				expect(spawnMock).toHaveBeenCalledWith("command", ["-v", "node"], expect.objectContaining({
+					stdio: ["ignore", "pipe", "pipe"],
+				}));
 			});
 
 			it("returns true when command exists on Windows (uses 'where')", async () => {
-				(execMock as any).mockImplementation(
-					(
-						cmd: string,
-						options: any,
-						callback: (err: any, stdout: any, stderr: any) => void,
-					) => {
-						expect(cmd).toBe("where node");
-						callback(null, "C:\\\\Program Files\\\\node.exe\r\n", "");
+				const fakeChild = {
+					stdout: { on: vi.fn() },
+					on: vi.fn(),
+				};
+
+				(spawnMock as any).mockReturnValue(fakeChild);
+
+				(fakeChild.on as any).mockImplementation(
+					(event: string, handler: (arg?: any) => void) => {
+						if (event === "close") {
+							handler(0);
+						}
+						return fakeChild;
+					},
+				);
+
+				(fakeChild.stdout.on as any).mockImplementation(
+					(event: string, handler: (data: any) => void) => {
+						if (event === "data") {
+							handler("C:\\\\Program Files\\\\node.exe\r\n");
+						}
 					},
 				);
 
@@ -177,17 +332,27 @@ describe("core/shell", () => {
 				});
 
 				expect(result).toBe(true);
+				expect(spawnMock).toHaveBeenCalledWith("where", ["node"], expect.objectContaining({
+					stdio: ["ignore", "pipe", "pipe"],
+				}));
 			});
 
 			it("returns false when the underlying check fails", async () => {
-				(execMock as any).mockImplementation(
-					(
-						cmd: string,
-						options: any,
-						callback: (err: any, stdout: any, stderr: any) => void,
-					) => {
-						expect(cmd).toBe("command -v nonexistent-cmd");
-						callback(new Error("not found"), "", "");
+				const fakeChild = {
+					stdout: { on: vi.fn() },
+					on: vi.fn(),
+				};
+
+				(spawnMock as any).mockReturnValue(fakeChild);
+
+				const error = new Error("not found");
+
+				(fakeChild.on as any).mockImplementation(
+					(event: string, handler: (arg?: any) => void) => {
+						if (event === "error") {
+							handler(error);
+						}
+						return fakeChild;
 					},
 				);
 
@@ -203,6 +368,9 @@ describe("core/shell", () => {
 				});
 
 				expect(result).toBe(false);
+				expect(spawnMock).toHaveBeenCalledWith("command", ["-v", "nonexistent-cmd"], expect.objectContaining({
+					stdio: ["ignore", "pipe", "pipe"],
+				}));
 			});
 		});
 
@@ -229,13 +397,12 @@ describe("core/shell", () => {
 				stdio: "inherit",
 			});
 
-			expect(spawnMock).toHaveBeenCalledWith("npm test", {
+			expect(spawnMock).toHaveBeenCalledWith("npm", ["test"], expect.objectContaining({
 				cwd: "/repo",
 				env: expect.objectContaining({ CI: "true" }),
-				shell: true,
 				stdio: "inherit",
 				timeout: 5000,
-			});
+			}));
 		});
 
 		it("rejects when spawn emits an error", async () => {
@@ -280,6 +447,34 @@ describe("core/shell", () => {
 			await expect(
 				runAsync("bad-exit", { stdio: "inherit" }),
 			).rejects.toThrowError("Command failed: bad-exit (exit 2)");
+		});
+
+		describe("parseCommand (tested via spawn calls)", () => {
+			it("parses simple command without args", () => {
+				expectParsedCommand("ls", "ls", []);
+			});
+
+			it("parses command with single arg", () => {
+				expectParsedCommand("echo test", "echo", ["test"]);
+			});
+
+			it("parses command with multiple args", () => {
+				expectParsedCommand("git commit -m message", "git", ["commit", "-m", "message"]);
+			});
+
+			it("parses command with quoted args containing spaces", () => {
+				expectParsedCommand('echo "hello world"', "echo", ["hello world"]);
+			});
+
+			it("parses command with multiple quoted args", () => {
+				expectParsedCommand('npm run "build script" --verbose', "npm", ["run", "build script", "--verbose"]);
+			});
+
+			it("handles quotes at start and end of arg", () => {
+				expectParsedCommand('cmd "arg with spaces" normal', "cmd", ["arg with spaces", "normal"]);
+			});
+
+
 		});
 	});
 });
