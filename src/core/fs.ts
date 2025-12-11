@@ -177,6 +177,7 @@ export async function renderMustacheTemplates(
 			const previousEscape = mustache.escape;
 			try {
 				// Disable HTML escaping to preserve literal "/" and other characters during render
+				// This is safe because the rendered content is written to files, not directly to HTML output
 				mustache.escape = (s: string) => s;
 
 				let rendered = mustache.render(masked, data);
