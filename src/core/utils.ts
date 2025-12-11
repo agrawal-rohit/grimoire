@@ -27,13 +27,13 @@ export function toSlug(value: string): string {
 	base = base.replace(/\.git$/, "");
 
 	// Replace invalid characters with a hyphen
-	base = base.replace(/[^a-z0-9._-]+/g, "-");
+	base = base.replaceAll(/[^a-z0-9._-]+/g, "-");
 
 	// Collapse multiple hyphens
-	base = base.replace(/-+/g, "-");
+	base = base.replaceAll(/-+/g, "-");
 
 	// Trim leading and trailing hyphens
-	base = base.replace(/^-+|-+$/g, "");
+	base = base.replaceAll(/(^-+)|(-+$)/g, "");
 
 	return base;
 }

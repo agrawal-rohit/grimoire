@@ -123,8 +123,9 @@ export async function runSummonPackage(
 	console.log();
 	console.log(chalk.bold("Summoning complete. Next steps:"));
 	console.log();
+	const cdCommand = `cd ${toSlug(summonConfig.name)}`;
 	console.log(
-		`  ${currentStep}. Enter your package directory using ${chalk.magentaBright(`cd ${toSlug(summonConfig.name)}`)}`,
+		`  ${currentStep}. Enter your package directory using ${chalk.magentaBright(cdCommand)},`,
 	);
 	currentStep += 1;
 

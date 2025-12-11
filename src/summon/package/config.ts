@@ -141,8 +141,13 @@ export async function getPackageTemplate(
 ): Promise<SummonPackageConfiguration["template"]> {
 	let candidateTemplates: string[] = [];
 
-	// If it's not running with local mode, then show a loading spinner until the templates are fetched from Github
-	if (!IS_LOCAL_MODE) {
+	// If it's running in local mode, fetch templates without spinner
+	if (IS_LOCAL_MODE) {
+		candidateTemplates = await listAvailableTemplates(language, "package");
+	}
+
+	// Otherwise, show a loading spinner until the templates are fetched from Github
+	else {
 		console.log();
 		await tasks.runWithTasks(
 			"Checking available package templates",
@@ -150,11 +155,6 @@ export async function getPackageTemplate(
 				candidateTemplates = await listAvailableTemplates(language, "package");
 			},
 		);
-	}
-
-	// In local mode, the templates are fetched from the file system which is a pretty quick operation
-	else {
-		candidateTemplates = await listAvailableTemplates(language, "package");
 	}
 
 	if (!candidateTemplates || candidateTemplates.length === 0)

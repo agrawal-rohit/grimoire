@@ -94,7 +94,7 @@ export async function getRequiredGithubSecrets(
 		// No workflows directory found; ignore
 	}
 
-	return Array.from(secrets).sort();
+	return Array.from(secrets).sort((a, b) => a.localeCompare(b));
 }
 /**
  * Write the chosen template files for a resource into the target directory.

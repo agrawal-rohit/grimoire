@@ -170,8 +170,9 @@ async function downloadRemoteTemplatesSubdir(
 	const promise = (async () => {
 		const exists = await subtreeExistsRemote(language, resource);
 		if (!exists) {
+			const resourcePart = resource ? `/${resource}` : "";
 			throw new Error(
-				`Remote templates path does not exist: templates/${language}${resource ? `/${resource}` : ""} (repo: ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}).`,
+				`Remote templates path does not exist: templates/${language}${resourcePart} (repo: ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}).`,
 			);
 		}
 
@@ -223,10 +224,7 @@ async function listRemoteChildDirsViaAPI(
 		);
 
 	const names = data
-		.filter(
-			(entry) =>
-				entry && entry.type === "dir" && typeof entry.name === "string",
-		)
+		.filter((entry) => entry?.type === "dir" && typeof entry.name === "string")
 		.map((entry) => entry.name as string)
 		.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
 
@@ -248,8 +246,9 @@ export async function resolveTemplatesDir(
 		if (localDir) return localDir;
 
 		const root = (await getLocalTemplatesRoot()) || "<no local templates root>";
+		const resourcePart = resource ? ` and resource "${resource}"` : "";
 		throw new Error(
-			`Local templates not found at ${root} for language "${language}"${resource ? ` and resource "${resource}"` : ""}.`,
+			`Local templates not found at ${root} for language "${language}"${resourcePart}.`,
 		);
 	}
 
@@ -257,8 +256,9 @@ export async function resolveTemplatesDir(
 	const remoteDir = await downloadRemoteTemplatesSubdir(language, resource);
 	if (await isDirAsync(remoteDir)) return remoteDir;
 
+	const resourcePart = resource ? ` and resource "${resource}"` : "";
 	throw new Error(
-		`No remote templates found for language "${language}"${resource ? ` and resource "${resource}"` : ""} in ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}.`,
+		`No remote templates found for language "${language}"${resourcePart} in ${DEFAULT_GITHUB_OWNER}/${DEFAULT_GITHUB_REPO}.`,
 	);
 }
 
