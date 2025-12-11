@@ -50,9 +50,10 @@ export async function textInput(
  */
 export async function selectInput<Value extends string>(
 	message: string,
-	opts: Omit<SelectPromptOptions, "type"> = { options: [] },
+	opts?: Omit<SelectPromptOptions, "type">,
 	defaultValue?: Value,
 ): Promise<Value> {
+	opts = opts ?? { options: [] };
 	const value: unknown = await consola.prompt(message, {
 		type: "select",
 		initial: defaultValue,
@@ -72,9 +73,10 @@ export async function selectInput<Value extends string>(
  */
 export async function multiselectInput(
 	message: string,
-	opts: Omit<MultiSelectOptions, "type"> = { options: [] },
+	opts?: Omit<MultiSelectOptions, "type">,
 	defaultValues?: string[],
 ): Promise<string[]> {
+	opts = opts ?? { options: [] };
 	const values = await consola.prompt(message, {
 		type: "multiselect",
 		initial: defaultValues,
@@ -94,9 +96,10 @@ export async function multiselectInput(
  */
 export async function confirmInput(
 	message: string,
-	opts: Omit<ConfirmPromptOptions, "type"> = {},
+	opts?: Omit<ConfirmPromptOptions, "type">,
 	defaultValue?: boolean,
 ): Promise<boolean> {
+	opts = opts ?? {};
 	const res = await consola.prompt(message, {
 		type: "confirm",
 		initial: defaultValue,

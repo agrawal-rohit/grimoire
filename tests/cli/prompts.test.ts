@@ -144,6 +144,19 @@ describe('cli/prompts', () => {
 
       expect(logger.end).toHaveBeenCalledWith('Operation canceled')
     })
+
+    test('should use default opts when not provided', async () => {
+      const mockPrompt = vi.mocked(consola.prompt)
+      mockPrompt.mockResolvedValue('option1')
+
+      await selectInput('Select an option')
+
+      expect(mockPrompt).toHaveBeenCalledWith('Select an option', expect.objectContaining({
+        type: 'select',
+        cancel: 'symbol',
+        options: []
+      }))
+    })
   })
 
   describe('multiselectInput', () => {
@@ -193,6 +206,19 @@ describe('cli/prompts', () => {
       await expect(() => multiselectInput('Select multiple', { options: [] })).rejects.toThrow('process.exit called with code 0')
 
       expect(logger.end).toHaveBeenCalledWith('Operation canceled')
+    })
+
+    test('should use default opts when not provided', async () => {
+      const mockPrompt = vi.mocked(consola.prompt)
+      mockPrompt.mockResolvedValue(['option1'])
+
+      await multiselectInput('Select multiple options')
+
+      expect(mockPrompt).toHaveBeenCalledWith('Select multiple options', expect.objectContaining({
+        type: 'multiselect',
+        cancel: 'symbol',
+        options: []
+      }))
     })
   })
 

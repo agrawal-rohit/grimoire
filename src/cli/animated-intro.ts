@@ -106,10 +106,14 @@ export async function animatedIntro(
 		return left.map((row, i) => padLeft(row) + GAP + padRight(paddedRight[i]));
 	}
 
-	for (let message of messages) {
-		message = await message;
-		const words = Array.isArray(message) ? message : String(message).split(" ");
-		const finalMsg = (await Promise.all(words)).join(" ");
+	for (const message of messages) {
+		const resolvedMessage = Array.isArray(message)
+			? await Promise.all(message)
+			: await message;
+		const words = Array.isArray(resolvedMessage)
+			? resolvedMessage
+			: String(resolvedMessage).split(" ");
+		const finalMsg = words.join(" ");
 
 		const columns = Math.max(40, stdout.columns || 80);
 		const maxRight = Math.max(10, columns - LEFT_WIDTH - GAP.length - 2);
