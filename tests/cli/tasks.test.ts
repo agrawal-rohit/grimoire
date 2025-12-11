@@ -30,7 +30,7 @@ vi.mock('chalk', () => ({
   }
 }))
 
-import { conditionalTask, runWithTasks } from '../../src/cli/tasks'
+import { task, conditionalTask, runWithTasks } from '../../src/cli/tasks'
 import tasks from '../../src/cli/tasks'
 import { Listr } from 'listr2'
 import chalk from 'chalk'
@@ -44,49 +44,66 @@ describe('cli/tasks', () => {
     vi.restoreAllMocks()
   })
 
-  describe('conditionalTask', () => {
-    test('should return array with task when condition is true', () => {
+  describe('task', () => {
+    test('should create a subtask with title and task function', () => {
       const title = 'Test Task'
-      const task = vi.fn(async () => {})
+      const taskFn = vi.fn(async () => {})
 
-      const result = conditionalTask(true, title, task)
+      const result = task(title, taskFn)
+
+      expect(result).toEqual({ title, task: taskFn })
+    })
+  })
+
+  describe('conditionalTask', () => {
+    test('should return array with subtask when condition is true', () => {
+      const title = 'Test Task'
+      const taskFn = vi.fn(async () => {})
+      const subtask = task(title, taskFn)
+
+      const result = conditionalTask(true, subtask)
 
       expect(result).toHaveLength(1)
-      expect(result[0]).toEqual({ title, task })
+      expect(result[0]).toEqual(subtask)
     })
 
     test('should return empty array when condition is false', () => {
       const title = 'Test Task'
-      const task = vi.fn(async () => {})
+      const taskFn = vi.fn(async () => {})
+      const subtask = task(title, taskFn)
 
-      const result = conditionalTask(false, title, task)
+      const result = conditionalTask(false, subtask)
 
       expect(result).toHaveLength(0)
       expect(result).toEqual([])
     })
 
-    test('should preserve task function reference when condition is true', () => {
+    test('should preserve subtask reference when condition is true', () => {
       const mockTask = vi.fn(async () => {})
+      const subtask = task('Title', mockTask)
 
-      const result = conditionalTask(true, 'Title', mockTask)
+      const result = conditionalTask(true, subtask)
 
-      expect(result[0].task).toBe(mockTask)
+      expect(result[0]).toBe(subtask)
     })
 
-    test('should handle multiple conditional tasks together', () => {
+    test('should handle multiple conditional subtasks together', () => {
       const task1 = vi.fn(async () => {})
       const task2 = vi.fn(async () => {})
       const task3 = vi.fn(async () => {})
+      const subtask1 = task('Task 1', task1)
+      const subtask2 = task('Task 2', task2)
+      const subtask3 = task('Task 3', task3)
 
       const allTasks = [
-        ...conditionalTask(true, 'Task 1', task1),
-        ...conditionalTask(false, 'Task 2', task2),
-        ...conditionalTask(true, 'Task 3', task3)
+        ...conditionalTask(true, subtask1),
+        ...conditionalTask(false, subtask2),
+        ...conditionalTask(true, subtask3)
       ]
 
       expect(allTasks).toHaveLength(2)
-      expect(allTasks[0].title).toBe('Task 1')
-      expect(allTasks[1].title).toBe('Task 3')
+      expect(allTasks[0]).toBe(subtask1)
+      expect(allTasks[1]).toBe(subtask3)
     })
   })
 
@@ -270,8 +287,8 @@ describe('cli/tasks', () => {
       const task2 = vi.fn(async () => {})
 
       const subtasks = [
-        ...conditionalTask(true, 'Task 1', task1),
-        ...conditionalTask(false, 'Task 2', task2)
+        ...conditionalTask(true, task('Task 1', task1)),
+        ...conditionalTask(false, task('Task 2', task2))
       ]
 
       await runWithTasks('Complete Setup', undefined, subtasks)
@@ -294,6 +311,7 @@ describe('cli/tasks', () => {
   describe('default export', () => {
     test('should export an object with all task utilities', () => {
       expect(tasks).toBeDefined()
+      expect(tasks.task).toBe(task)
       expect(tasks.runWithTasks).toBe(runWithTasks)
       expect(tasks.conditionalTask).toBe(conditionalTask)
     })
@@ -301,6 +319,11 @@ describe('cli/tasks', () => {
     test('should have runWithTasks method', () => {
       expect(tasks.runWithTasks).toBeDefined()
       expect(typeof tasks.runWithTasks).toBe('function')
+    })
+
+    test('should have task method', () => {
+      expect(tasks.task).toBeDefined()
+      expect(typeof tasks.task).toBe('function')
     })
 
     test('should have conditionalTask method', () => {

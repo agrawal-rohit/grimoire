@@ -13,18 +13,26 @@ export type Subtask = {
 };
 
 /**
- * Helper to conditionally include a task in a task list.
- * @param condition - Include the task when true; exclude when false.
+ * Create a subtask.
  * @param title - Task title.
  * @param task - Task function.
- * @returns Array with the task if condition is true; otherwise an empty array.
+ * @returns A subtask object.
+ */
+export function task(title: string, task: () => Promise<void>): Subtask {
+	return { title, task };
+}
+
+/**
+ * Helper to conditionally include a subtask in a task list.
+ * @param condition - Include the subtask when true; exclude when false.
+ * @param subtask - The subtask to conditionally include.
+ * @returns Array with the subtask if condition is true; otherwise an empty array.
  */
 export function conditionalTask(
 	condition: boolean,
-	title: string,
-	task: () => Promise<void>,
+	subtask: Subtask,
 ): Subtask[] {
-	return condition ? [{ title, task }] : [];
+	return condition ? [subtask] : [];
 }
 
 /**
@@ -85,6 +93,7 @@ export async function runWithTasks(
 /** Convenience default export for straightforward importing. */
 const tasks = {
 	runWithTasks,
+	task,
 	conditionalTask,
 };
 
