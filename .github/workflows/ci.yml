@@ -144,6 +144,17 @@ jobs:
       - name: Update SonarQube version
         run: sed -i 's/sonar.projectVersion=.*/sonar.projectVersion=${{ github.sha }}/' sonar-project.properties
 
+      - name: Check SONAR_TOKEN
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN is empty"
+            exit 1
+          else
+            echo "SONAR_TOKEN is set"
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
