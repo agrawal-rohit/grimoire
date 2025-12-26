@@ -1,11 +1,11 @@
 import cac from "cac";
-import { registerSummonCli } from "./summon";
+import { registerResourcesCli } from "./resources";
 
 export default function run(): void {
-	const app = cac(" grimoire");
+	const app = cac("yehle");
 
 	// Register commands
-	registerSummonCli(app);
+	registerResourcesCli(app);
 
 	// Register the help command
 	app.help();

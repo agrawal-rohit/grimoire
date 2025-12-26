@@ -21,24 +21,24 @@ describe("core/constants", () => {
 		process.env = originalEnv;
 	});
 
-	it('sets IS_LOCAL_MODE to true when GRIMOIRE_LOCAL_TEMPLATES is "true"', async () => {
-		process.env.GRIMOIRE_LOCAL_TEMPLATES = "true";
+	it('sets IS_LOCAL_MODE to true when YEHLE_LOCAL_TEMPLATES is "true"', async () => {
+		process.env.YEHLE_LOCAL_TEMPLATES = "true";
 
 		const { IS_LOCAL_MODE } = await importConstants();
 
 		expect(IS_LOCAL_MODE).toBe(true);
 	});
 
-	it('treats GRIMOIRE_LOCAL_TEMPLATES value as truthy in current test environment', async () => {
-		process.env.GRIMOIRE_LOCAL_TEMPLATES = "false";
+	it('treats YEHLE_LOCAL_TEMPLATES value as truthy in current test environment', async () => {
+		process.env.YEHLE_LOCAL_TEMPLATES = "false";
 
 		const { IS_LOCAL_MODE } = await importConstants();
 
 		expect(typeof IS_LOCAL_MODE).toBe("boolean");
 	});
 
-	it("exposes IS_LOCAL_MODE as a boolean when GRIMOIRE_LOCAL_TEMPLATES is undefined", async () => {
-		delete process.env.GRIMOIRE_LOCAL_TEMPLATES;
+	it("exposes IS_LOCAL_MODE as a boolean when YEHLE_LOCAL_TEMPLATES is undefined", async () => {
+		delete process.env.YEHLE_LOCAL_TEMPLATES;
 
 		const { IS_LOCAL_MODE } = await importConstants();
 
@@ -46,7 +46,7 @@ describe("core/constants", () => {
 	});
 
 	it("exposes IS_LOCAL_MODE as a boolean for any non-true value", async () => {
-		process.env.GRIMOIRE_LOCAL_TEMPLATES = "1";
+		process.env.YEHLE_LOCAL_TEMPLATES = "1";
 
 		const { IS_LOCAL_MODE } = await importConstants();
 

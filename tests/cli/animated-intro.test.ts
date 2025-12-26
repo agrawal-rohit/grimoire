@@ -23,7 +23,8 @@ vi.mock('chalk', () => ({
     cyanBright: vi.fn((text) => text),
     redBright: vi.fn((text) => text),
     yellowBright: vi.fn((text) => text),
-    greenBright: vi.fn((text) => text)
+    greenBright: vi.fn((text) => text),
+    hex: vi.fn(() => vi.fn((text) => text))
   }
 }))
 
@@ -128,7 +129,7 @@ describe('cli/animated-intro', () => {
   })
 
   describe('options', () => {
-    test('should use default title "Grimoire"', async () => {
+    test('should use default title "Yehle"', async () => {
       await animatedIntro('Test message')
 
       expect(stdoutWriteSpy).toHaveBeenCalled()

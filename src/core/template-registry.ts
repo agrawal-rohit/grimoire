@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { downloadTemplate } from "giget";
-import type { Language } from "../summon/package/config";
+import type { Language } from "../resources/package/config";
 import { IS_LOCAL_MODE } from "./constants";
 import { isDirAsync } from "./fs";
 
@@ -13,11 +13,11 @@ const SHARED_DIR_NAME = "shared";
 const DEFAULT_GITHUB_OWNER = "agrawal-rohit";
 
 /** Default GitHub repository to fetch templates from in remote mode. */
-const DEFAULT_GITHUB_REPO = "grimoire";
+const DEFAULT_GITHUB_REPO = "yehle";
 
 /** HTTP headers used when communicating with the GitHub API. */
 const GITHUB_HEADERS = {
-	"User-Agent": "grimoire-cli",
+	"User-Agent": "yehle-cli",
 	Accept: "application/vnd.github.v3+json",
 } as const;
 
@@ -69,7 +69,6 @@ async function listChildDirs(dir: string): Promise<string[]> {
 		.filter((e) => e.isDirectory())
 		.map((e) => e.name)
 		.filter((n) => n.toLowerCase() !== SHARED_DIR_NAME);
-
 	return names;
 }
 
@@ -177,7 +176,7 @@ async function downloadRemoteTemplatesSubdir(
 		}
 
 		const tmpRoot = await fs.promises.mkdtemp(
-			path.join(os.tmpdir(), "grimoire-templates-"),
+			path.join(os.tmpdir(), "yehle-templates-"),
 		);
 
 		try {

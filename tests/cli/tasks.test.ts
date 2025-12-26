@@ -26,7 +26,8 @@ vi.mock('listr2', () => ({
 vi.mock('chalk', () => ({
   default: {
     magentaBright: vi.fn((text) => text),
-    grey: vi.fn((text) => text)
+    grey: vi.fn((text) => text),
+    hex: vi.fn(() => vi.fn((text) => text))
   }
 }))
 
@@ -118,12 +119,14 @@ describe('cli/tasks', () => {
       expect(listrInstance.run).toHaveBeenCalled()
     })
 
-    test('should format goal title with magentaBright', async () => {
+    test('should format goal title with primaryText', async () => {
       const goalTitle = 'Beautiful Goal'
 
       await runWithTasks(goalTitle)
 
-      expect(chalk.magentaBright).toHaveBeenCalledWith(goalTitle)
+      expect(chalk.hex).toHaveBeenCalledWith('#d52b79')
+      const colorFn = (chalk.hex as any).mock.results[0].value
+      expect(colorFn).toHaveBeenCalledWith(goalTitle)
     })
 
     test('should execute single task when task function is provided', async () => {

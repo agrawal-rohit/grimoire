@@ -1,16 +1,16 @@
 <div align="center">
-  <img src="https://cdn.rohit.build/oss/grimoire/logo.png" alt="Grimoire" style="width: 30%; margin: auto" />
+  <img src="https://cdn.rohit.build/oss/yehle/logo.png" alt="Yehle" style="width: 30%; margin: auto" />
 </div>
 
 <br />
 
 <div align="center">
   <p align="center" style="width: 80%; margin: auto">
-    <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/agrawal-rohit/grimoire/ci.yml">
-    <img alt="Sonar Coverage" src="https://img.shields.io/sonar/coverage/agrawal-rohit_grimoire?server=https%3A%2F%2Fsonarcloud.io">
-    <img alt="Downloads" src="https://img.shields.io/npm/dt/@agrawalrohit/grimoire">
+    <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/agrawal-rohit/yehle/ci.yml">
+    <img alt="Sonar Coverage" src="https://img.shields.io/sonar/coverage/agrawal-rohit_yehle?server=https%3A%2F%2Fsonarcloud.io">
+    <img alt="Downloads" src="https://img.shields.io/npm/dt/yehle">
     <img alt="Biome" src="https://img.shields.io/badge/code_style-biome-60a5fa">
-    <img alt="License" src="https://img.shields.io/github/license/agrawal-rohit/grimoire" />
+    <img alt="License" src="https://img.shields.io/github/license/agrawal-rohit/yehle" />
   </p>
 </div>
 
@@ -21,16 +21,12 @@
 <br />
 
 <div align="center">
-    <img src="https://cdn.rohit.build/oss/grimoire/preview.gif" alt="Grimoire Preview" style="margin: auto" />
+    <img src="https://cdn.rohit.build/oss/yehle/preview.gif" alt="Yehle Preview" style="margin: auto" />
 </div>
 
 <br />
 
-`grimoire` is a CLI tool that takes care of the common [yak-shaving](https://softwareengineering.stackexchange.com/a/388236) operations in modern software development through opinionated templates and tooling configurations. Building something with code is nothing short of magic, `grimoire` is essentially my personal book of magic spells _(I used to be a try-hard [Wizard101](https://www.wizard101.com/) player back in the day, which should explain all the magic metaphors)_
-
-**Why build `grimoire`?**
-
-I found myself spending a criminal amount of time configuring every new library, monorepo, or microservice with _"just the right tooling setup"_ before I could start writing the logic that really mattered. Add on the fact that different languages serve a particular use-case better than others _(with each language having it's own tooling ecosystem that keeps evolving)_ - the eventual ["choice paralysis"](https://en.wikipedia.org/wiki/Analysis_paralysis) was too annoying to deal with everyday.
+`yehle` is a CLI command for scaffolding modern software projects by taking caring of common [yak-shaving](https://softwareengineering.stackexchange.com/a/388236) operations through opinionated templates and tooling configurations. I found myself spending a frustrating amount of time configuring every new library, monorepo, or microservice with _"just the right tooling setup"_ before I could start writing the logic that's actually fun. Add on the fact that different languages serve a particular use-case better than others _(with each language having it's own tooling ecosystem that keeps evolving)_ - the inevitable duplication of work was too annoying to deal with everyday.
 
 ## Table of Contents
 
@@ -40,18 +36,15 @@ I found myself spending a criminal amount of time configuring every new library,
 * [Usage](#usage)
   * [Requirements](#requirements)
   * [Quickstart](#quickstart)
-  * [Spells](#spells)
-    * [Summoning](#summoning)
-    * [Examples](#examples)
+  * [Examples](#examples)
 * [Commands Reference](#commands-reference)
-  * [`summon <resource>`](#summon-resource)
-    * [`package`](#package)
+  * [`package`](#package)
 * [Contributing](#contributing)
 * [License](#license)
 
 ## Features
 
-`grimoire` sets you up with several best practices adopted in modern software development with pre-configured tooling that should cover most use-cases. `grimoire` achieves this through:
+`yehle` sets you up with several best practices adopted in modern software development with pre-configured tooling that should cover most use-cases. `yehle` achieves this through:
 
 * Automatic dependency upgrades using [dependabot][]
 * Automatic builds, tests, and releases with [github actions][github-actions]
@@ -69,7 +62,7 @@ I found myself spending a criminal amount of time configuring every new library,
 
 ## Supported Languages
 
-In addition to the general tooling listed above, `grimoire` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
+In addition to the general tooling listed above, `yehle` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
 
 ### Typescript
 
@@ -113,35 +106,23 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 
 ### Quickstart
 
-The easiest way to start is via [npx][] (no install required):
+The easiest way to start is to call the CLI through [npx][] to generate a new project from one of the provided templates:
 
 ```bash
-npx @agrawalrohit/grimoire@latest --help
+npx yehle <resource>
 ```
-
-### Spells
-
-#### Summoning
-
-**Summoning** creates a new project from opinionated templates so you can start writing code without worrying about the tooling, tests, and CI. You can summon a resource using the following command:
-
-```bash
-npx @agrawalrohit/grimoire@latest summon <resource>
-```
-
-The details for summon command and the list of supported resources are provided in the [summoning command reference](#summon-resource).
 
 > [!IMPORTANT]
 > Some workflows in the generated projects may require repository secrets to be set in the GitHub project _(Settings → Secrets and variables → Actions)_. Additionally, ensure that "Allow GitHub Actions to create and approve pull requests" is checked in Settings → Actions → General. Make sure to set them to prevent [github action][github-actions] failures before releasing your code out in the world.
 
-`grimoire` uses a simple tag-driven release workflow for stress-free delivery (This same workflow is configured for projects summoned with `grimoire`). See the [release process](CONTRIBUTING.md#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+`yehle` uses a simple tag-driven release workflow for stress-free delivery _(This same workflow is configured for projects generated with `yehle`)_. See the [release process](CONTRIBUTING.md#release-process) section in [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ### Examples
 
 #### Create a public NPM package
 
 ```bash
-npx @agrawalrohit/grimoire@latest summon package \
+npx yehle package \
   --name my-package \
   --lang typescript \
   --template default \
@@ -151,7 +132,7 @@ npx @agrawalrohit/grimoire@latest summon package \
 #### Create a private internal Typescript library
 
 ```bash
-npx @agrawalrohit/grimoire@latest summon package \
+npx yehle package \
   --name internal-utils \
   --lang typescript \
   --template default
@@ -159,23 +140,19 @@ npx @agrawalrohit/grimoire@latest summon package \
 
 ## Commands Reference
 
-### <span id="summon-resource"></span>`summon <resource>`
-
-API reference for the summon command. For an overview, see [Spells](#spells) → [Summoning](#summoning).
-
 #### <span id="package"></span>`package`
 
-Scaffold a new `package` for one of the [supported languages](#supported-languages) with sensible defaults and development best practices.
-If you're new to `grimoire`, I would recommend using the interactive CLI for a guided experience.
+Generate a new `package` for one of the [supported languages](#supported-languages) with sensible defaults, development best practices, and release workflows.
+If you're new to `yehle`, I would recommend using the interactive CLI for a guided experience.
 
 ```bash
-npx @agrawalrohit/grimoire@latest summon package
+npx yehle package
 ```
 
 Once you're acquainted, you can skip through most prompts by providing the values through the CLI flags directly.
 
   ```bash
-  npx @agrawalrohit/grimoire@latest summon package \
+  npx yehle package \
     --name my-lib \
     --lang typescript \
     --template default \
@@ -193,12 +170,12 @@ Once you're acquainted, you can skip through most prompts by providing the value
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to report issues, propose changes, and submit pull requests.
 
-If you create a project with grimoire, you can show support by adding this badge to your README:
+If you create a project with `yehle`, you can show support by adding this badge to your README:
 
-![Made with Grimoire](https://img.shields.io/badge/made_with-grimoire-7452A3)
+![Made with Yehle](https://img.shields.io/badge/made_with-yehle-d52b79)
 
 ```html
-<a href="https://github.com/agrawal-rohit/grimoire"><img alt="Made with Grimoire" src="https://img.shields.io/badge/made_with-grimoire-7452A3"></a>
+<a href="https://github.com/agrawal-rohit/yehle"><img alt="Made with Yehle" src="https://img.shields.io/badge/made_with-yehle-d52b79"></a>
 ```
 
 ## License

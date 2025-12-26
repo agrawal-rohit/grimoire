@@ -1,5 +1,5 @@
-import { Language } from "../summon/package/config";
-import { validateTypescriptPackageName } from "../summon/package/typescript";
+import { Language } from "../resources/package/config";
+import { validateTypescriptPackageName } from "../resources/package/typescript";
 import { commandExistsAsync, runAsync } from "./shell";
 
 /** Type representing the possible package managers. */

@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { primaryText } from "../../cli/logger";
 import prompts from "../../cli/prompts";
 import tasks from "../../cli/tasks";
 import { IS_LOCAL_MODE } from "../../core/constants";
@@ -25,8 +25,8 @@ export const templatePublicPaths: Record<Language | "shared", string[]> = {
 	[Language.TYPESCRIPT]: ["release.mustache.yml"],
 };
 
-/** Describes the configuration for summoning a package. */
-export type SummonPackageConfiguration = {
+/** Describes the configuration for generating a package. */
+export type GeneratePackageConfiguration = {
 	/** The selected programming language for the package. */
 	lang: Language;
 	/** The package name. */
@@ -47,9 +47,9 @@ export type SummonPackageConfiguration = {
  * Gather relevant configuration to proceed with the package creation
  * @returns A JSON object with the package configuration
  */
-export async function getSummonPackageConfiguration(
-	cliFlags: Partial<SummonPackageConfiguration> = {},
-): Promise<SummonPackageConfiguration> {
+export async function getGeneratePackageConfiguration(
+	cliFlags: Partial<GeneratePackageConfiguration> = {},
+): Promise<GeneratePackageConfiguration> {
 	const lang = await getPackageLanguage(cliFlags);
 	const name = await getPackageName(lang, cliFlags);
 	const template = await getPackageTemplate(lang, cliFlags);
@@ -64,7 +64,7 @@ export async function getSummonPackageConfiguration(
 		authorGitUsername = await promptAuthorGitUsername();
 	}
 
-	const answers: SummonPackageConfiguration = {
+	const answers: GeneratePackageConfiguration = {
 		lang: lang,
 		name: name,
 		template: template,
@@ -83,8 +83,8 @@ export async function getSummonPackageConfiguration(
  * @returns The selected programming language type.
  */
 export async function getPackageLanguage(
-	cliFlags: Partial<SummonPackageConfiguration> = {},
-): Promise<SummonPackageConfiguration["lang"]> {
+	cliFlags: Partial<GeneratePackageConfiguration> = {},
+): Promise<GeneratePackageConfiguration["lang"]> {
 	const languageOptions = Object.keys(Language).map((key: string) => ({
 		label: capitalizeFirstLetter(Language[key as keyof typeof Language]),
 		value: Language[key as keyof typeof Language],
@@ -120,8 +120,8 @@ export async function getPackageLanguage(
  */
 export async function getPackageName(
 	language: Language,
-	cliFlags: Partial<SummonPackageConfiguration> = {},
-): Promise<SummonPackageConfiguration["name"]> {
+	cliFlags: Partial<GeneratePackageConfiguration> = {},
+): Promise<GeneratePackageConfiguration["name"]> {
 	const name =
 		cliFlags.name ??
 		(await prompts.textInput(
@@ -137,8 +137,8 @@ export async function getPackageName(
 
 export async function getPackageTemplate(
 	language: Language,
-	cliFlags: Partial<SummonPackageConfiguration> = {},
-): Promise<SummonPackageConfiguration["template"]> {
+	cliFlags: Partial<GeneratePackageConfiguration> = {},
+): Promise<GeneratePackageConfiguration["template"]> {
 	let candidateTemplates: string[] = [];
 
 	// If it's running in local mode, fetch templates without spinner
@@ -171,7 +171,7 @@ export async function getPackageTemplate(
 	if (templateOptions.length === 1) {
 		template = templateOptions[0].value;
 		console.log(
-			chalk.magentaBright(
+			primaryText(
 				`(Only one package template is available, using "${template}".)`,
 			),
 		);
@@ -201,8 +201,8 @@ export async function getPackageTemplate(
  */
 export async function getPackageVisibility(
 	language: Language,
-	cliFlags: Partial<SummonPackageConfiguration> = {},
-): Promise<SummonPackageConfiguration["public"]> {
+	cliFlags: Partial<GeneratePackageConfiguration> = {},
+): Promise<GeneratePackageConfiguration["public"]> {
 	const packageRegistry = LANGUAGE_PACKAGE_REGISTRY[language];
 	const isPublic =
 		cliFlags.public ??

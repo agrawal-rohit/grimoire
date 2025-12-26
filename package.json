@@ -1,6 +1,6 @@
 {
 	"version": "0.0.8",
-	"name": "@agrawalrohit/grimoire",
+	"name": "yehle",
 	"description": "An opinionated book of spells for the modern developer",
 	"bin": "./bin/cli.js",
 	"files": [
@@ -10,11 +10,11 @@
 		"LICENSE"
 	],
 	"author": "Rohit Agrawal <https://github.com/agrawal-rohit>",
-	"repository": "https://github.com/agrawal-rohit/grimoire",
-	"homepage": "https://github.com/agrawal-rohit/grimoire#readme",
+	"repository": "https://github.com/agrawal-rohit/yehle",
+	"homepage": "https://github.com/agrawal-rohit/yehle#readme",
 	"license": "MIT",
 	"private": false,
-	"bugs": "https://github.com/agrawal-rohit/grimoire/issues",
+	"bugs": "https://github.com/agrawal-rohit/yehle/issues",
 	"scripts": {
 		"test": "vitest",
 		"test-mutations": "stryker run",

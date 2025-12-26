@@ -7,7 +7,7 @@ import {
 	ensurePackageManager,
 	getInstallScript,
 } from "../../src/core/pkg-manager";
-import { Language } from "../../src/summon/package/config";
+import { Language } from "../../src/resources/package/config";
 import * as shell from "../../src/core/shell";
 
 describe("core/pkg-manager", () => {
@@ -28,7 +28,7 @@ describe("core/pkg-manager", () => {
 
 		beforeEach(async () => {
 			const tsModule: any = await import(
-				"../../src/summon/package/typescript"
+				"../../src/resources/package/typescript"
 			);
 			validateTsSpy = vi.spyOn(
 				tsModule,

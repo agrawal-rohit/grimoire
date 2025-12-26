@@ -10,7 +10,7 @@ import {
 	writeFileAsync,
 } from "../../core/fs";
 import { resolveTemplatesDir } from "../../core/template-registry";
-import type { SummonPackageConfiguration } from "./config";
+import type { GeneratePackageConfiguration } from "./config";
 import { templatePublicPaths } from "./config";
 
 /**
@@ -31,19 +31,19 @@ export async function createPackageDirectory(
 /**
  * Create the package.json using the provided answers and package manager version.
  * @param targetDir - Absolute path to the package directory.
- * @param summonConfig - Summon configuration describing the new package.
+ * @param generateConfig - Generate configuration describing the new package.
  * @param packageManagerVersion - A string like "pnpm@9.0.0" to record in package.json's packageManager.
  * @returns The final package.json object that was persisted to disk.
  * @throws If an existing package.json is invalid JSON.
  */
 export async function applyTemplateModifications(
 	targetDir: string,
-	summonConfig: SummonPackageConfiguration,
+	generateConfig: GeneratePackageConfiguration,
 	packageManagerVersion: string,
 ): Promise<void> {
 	const chosenTemplateDir = await resolveTemplatesDir(
-		summonConfig.lang,
-		`package/${summonConfig.template}`,
+		generateConfig.lang,
+		`package/${generateConfig.template}`,
 	);
 	const hasPlayground = await isDirAsync(
 		path.join(chosenTemplateDir, "playground"),
@@ -51,16 +51,16 @@ export async function applyTemplateModifications(
 	const templateMetadata = {
 		packageManagerVersion,
 		templateHasPlayground: hasPlayground,
-		...summonConfig,
+		...generateConfig,
 	};
 
 	await renderMustacheTemplates(targetDir, templateMetadata);
 
 	// Remove public files after rendering, so templated files match by basename
-	if (!summonConfig.public) {
+	if (!generateConfig.public) {
 		const publicFiles = [
 			...templatePublicPaths.shared,
-			...(templatePublicPaths[summonConfig.lang] ?? []),
+			...(templatePublicPaths[generateConfig.lang] ?? []),
 		];
 		await removeFilesByBasename(targetDir, publicFiles);
 	}
@@ -99,42 +99,42 @@ export async function getRequiredGithubSecrets(
 /**
  * Write the chosen template files for a resource into the target directory.
  * @param targetDir - Package root directory to write into.
- * @param summonConfig - Summon configuration describing the new package.
+ * @param generateConfig - Generate configuration describing the new package.
  * @returns A promise that resolves when the template files have been written.
  */
 export async function writePackageTemplateFiles(
 	targetDir: string,
-	summonConfig: SummonPackageConfiguration,
+	generateConfig: GeneratePackageConfiguration,
 ): Promise<void> {
 	// Global shared: templates/shared
 	const globalShared = await resolveTemplatesDir("shared");
 	await copyDirSafeAsync(globalShared, targetDir);
 
 	// Language shared: templates/<lang>/shared
-	const langShared = await resolveTemplatesDir(summonConfig.lang, "shared");
+	const langShared = await resolveTemplatesDir(generateConfig.lang, "shared");
 	await copyDirSafeAsync(langShared, targetDir);
 
 	// Item-specific shared: templates/<lang>/package/shared
 	const itemShared = await resolveTemplatesDir(
-		summonConfig.lang,
+		generateConfig.lang,
 		"package/shared",
 	);
 	await copyDirSafeAsync(itemShared, targetDir);
 
 	// Item-specific template: templates/<lang>/package/<template>
 	const chosenTemplateDir = await resolveTemplatesDir(
-		summonConfig.lang,
-		`package/${summonConfig.template}`,
+		generateConfig.lang,
+		`package/${generateConfig.template}`,
 	);
 	await copyDirSafeAsync(chosenTemplateDir, targetDir);
 
 	// Add MIT license
-	if (summonConfig.public && summonConfig.authorName) {
+	if (generateConfig.public && generateConfig.authorName) {
 		const year = new Date().getFullYear().toString();
 
 		const licenseText = mitLicense.licenseText
 			.replace("<year>", year)
-			.replace("<copyright holders>", summonConfig.authorName);
+			.replace("<copyright holders>", generateConfig.authorName);
 
 		await writeFileAsync(path.join(targetDir, "LICENSE"), licenseText);
 	}

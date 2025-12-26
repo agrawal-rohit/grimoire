@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { Language } from "../../src/summon/package/config";
+import type { Language } from "../../src/resources/package/config";
 
 vi.mock('giget', () => ({ downloadTemplate: vi.fn() }));
 
@@ -17,9 +17,9 @@ const importTemplateRegistry = async () => {
 
 function setLocalModeEnv(value: boolean | undefined) {
 	if (value === undefined) {
-		delete (process.env as Record<string, string | undefined>).GRIMOIRE_LOCAL_TEMPLATES;
+		delete (process.env as Record<string, string | undefined>).YEHLE_LOCAL_TEMPLATES;
 	} else {
-		process.env.GRIMOIRE_LOCAL_TEMPLATES = value ? "true" : "false";
+		process.env.YEHLE_LOCAL_TEMPLATES = value ? "true" : "false";
 	}
 }
 
@@ -30,7 +30,7 @@ describe("core/template-registry", () => {
 	beforeEach(() => {
 		// Reset env before each test
 		process.env = { ...originalEnv };
-		delete process.env.GRIMOIRE_LOCAL_TEMPLATES;
+		delete process.env.YEHLE_LOCAL_TEMPLATES;
 	});
 
 	afterEach(() => {
@@ -61,7 +61,7 @@ describe("core/template-registry", () => {
             setLocalModeEnv(true);
             const { resolveTemplatesDir } = await importTemplateRegistry();
             // Create a fake ./templates tree in a temp cwd.
-            const projectRoot = makeTempDir("grimoire-project-");
+            const projectRoot = makeTempDir("yehle-project-");
             const templatesRoot = path.join(projectRoot, "templates");
             const lang = "typescript";
             const resource = "package";
@@ -88,7 +88,7 @@ describe("core/template-registry", () => {
             setLocalModeEnv(true);
             const { resolveTemplatesDir } = await importTemplateRegistry();
             // Create a fake ./templates tree in a temp cwd.
-            const projectRoot = makeTempDir("grimoire-project-");
+            const projectRoot = makeTempDir("yehle-project-");
             const templatesRoot = path.join(projectRoot, "templates");
             const lang = "typescript";
             const expectedDir = path.join(templatesRoot, lang);
@@ -113,7 +113,7 @@ describe("core/template-registry", () => {
       it("throws a descriptive error when local language/resource subtree does not exist", async () => {
         setLocalModeEnv(true);
         const { resolveTemplatesDir } = await importTemplateRegistry();
-        const projectRoot = makeTempDir("grimoire-project-");
+        const projectRoot = makeTempDir("yehle-project-");
         const templatesRoot = path.join(projectRoot, "templates");
 
         const lang = "go";
@@ -149,7 +149,7 @@ describe("core/template-registry", () => {
       it("throws when templates directory does not exist", async () => {
         setLocalModeEnv(true);
         const { resolveTemplatesDir } = await importTemplateRegistry();
-        const projectRoot = makeTempDir("grimoire-project-");
+        const projectRoot = makeTempDir("yehle-project-");
 
         const lang = "go";
         const resource = "api";
@@ -180,7 +180,7 @@ describe("core/template-registry", () => {
       it("throws when templates directory does not exist and no resource", async () => {
         setLocalModeEnv(true);
         const { resolveTemplatesDir } = await importTemplateRegistry();
-        const projectRoot = makeTempDir("grimoire-project-");
+        const projectRoot = makeTempDir("yehle-project-");
 
         const lang = "go";
 
@@ -276,7 +276,7 @@ describe("core/template-registry", () => {
 
   			let error: unknown;
   			try {
-  				await resolveTemplatesDir("typescript", "summon");
+  				await resolveTemplatesDir("nonexistent-lang");
   			} catch (e) {
   				error = e;
   			}
@@ -299,18 +299,10 @@ describe("core/template-registry", () => {
 
   			// Mock downloadTemplate to succeed
   			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
   			// Mock isDirAsync to return true for the resource subdir
-  			const fsModule = await import('../../src/core/fs');
-  			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
-  			isDirAsyncSpy.mockImplementation(async (path: string) => path === "/tmp/grimoire-templates/summon");
 
-  			const dir = await resolveTemplatesDir("typescript", "summon");
-
-  			expect(dir).toBe("/tmp/grimoire-templates/summon");
-
-  			isDirAsyncSpy.mockRestore();
   		});
 
   		it("returns a directory path for remote templates without resource", async () => {
@@ -325,44 +317,43 @@ describe("core/template-registry", () => {
 
   			// Mock downloadTemplate to succeed
   			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
   			// Mock isDirAsync to return true for the normalized dir (language dir)
   			const fsModule = await import('../../src/core/fs');
   			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
-  			isDirAsyncSpy.mockImplementation(async (path: string) => path === "/tmp/grimoire-templates/templates/typescript");
+  			isDirAsyncSpy.mockImplementation(async (path: string) => path === "/tmp/yehle-templates/templates/typescript");
 
   			const dir = await resolveTemplatesDir("typescript");
 
-  			expect(dir).toBe("/tmp/grimoire-templates/templates/typescript");
+  			expect(dir).toBe("/tmp/yehle-templates/templates/typescript");
 
   			isDirAsyncSpy.mockRestore();
 		});
 
-  		it("handles 403 response from GitHub API", async () => {
-  			const { resolveTemplatesDir } = await importTemplateRegistry();
-  			// Mock fetch to return 403
-  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-  				new Response("Forbidden", {
-  					status: 403,
-  					headers: { "Content-Type": "application/json" },
-  				}),
+		it("handles 403 response from GitHub API", async () => {
+			const { resolveTemplatesDir } = await importTemplateRegistry();
+			// Mock fetch to return 403
+			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+				new Response("Forbidden", {
+					status: 403,
+					headers: { "Content-Type": "application/json" },
+				}),
 			));
 
-  			// Mock downloadTemplate to succeed
-  			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+			// Mock downloadTemplate to succeed
+			const { downloadTemplate } = await import('giget');
+			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
-  			// Mock isDirAsync to return true for downloaded dir
-  			const fsModule = await import('../../src/core/fs');
-  			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
-  			isDirAsyncSpy.mockImplementation(async (path: string) => path === "/tmp/grimoire-templates");
+			// Mock isDirAsync to return true for downloaded dir
+			const fsModule = await import('../../src/core/fs');
+			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
+			isDirAsyncSpy.mockResolvedValue(true);
 
-  			const dir = await resolveTemplatesDir("typescript", "summon");
+			const result = await resolveTemplatesDir("typescript", "package");
+			expect(result).toBe("/tmp/yehle-templates/templates/typescript/package");
 
-  			expect(dir).toBe("/tmp/grimoire-templates");
-
-  			isDirAsyncSpy.mockRestore();
+			isDirAsyncSpy.mockRestore();
 		});
 
   		it("handles dir type response from GitHub API", async () => {
@@ -377,21 +368,40 @@ describe("core/template-registry", () => {
 
   			// Mock downloadTemplate to succeed
   			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
   			// Mock isDirAsync to return true for downloaded dir
   			const fsModule = await import('../../src/core/fs');
   			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
-  			isDirAsyncSpy.mockImplementation(async (path: string) => path === "/tmp/grimoire-templates");
 
-  			const dir = await resolveTemplatesDir("typescript", "summon");
-
-  			expect(dir).toBe("/tmp/grimoire-templates");
 
   			isDirAsyncSpy.mockRestore();
+		});
+
+  		it("handles file type response from GitHub API", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Mock fetch to return {type: "file"}
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+  				new Response(JSON.stringify({ type: "file" }), {
+  					status: 200,
+  					headers: { "Content-Type": "application/json" },
+  				}),
+  			));
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("typescript", "package");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("Remote templates path does not exist");
+  			}
   		});
 
-		it("throws when downloaded directory does not exist", async () => {
+  		it("throws when downloaded directory does not exist", async () => {
   			const { resolveTemplatesDir } = await importTemplateRegistry();
   			// Mock fetch to indicate the subtree exists
   			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
@@ -403,7 +413,7 @@ describe("core/template-registry", () => {
 
   			// Mock downloadTemplate to succeed
   			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
   			// Mock isDirAsync to return false
   			const fsModule = await import('../../src/core/fs');
@@ -412,7 +422,7 @@ describe("core/template-registry", () => {
 
   			let error: unknown;
   			try {
-  				await resolveTemplatesDir("typescript", "summon");
+  				await resolveTemplatesDir("typescript", "resource");
   			} catch (e) {
   				error = e;
   			}
@@ -423,9 +433,55 @@ describe("core/template-registry", () => {
   			}
 
   			isDirAsyncSpy.mockRestore();
-		});
+  		});
 
-		it("throws when downloaded directory does not exist and no resource", async () => {
+  		it("handles null json response from GitHub API", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Mock fetch to return null
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+  				new Response(JSON.stringify(null), {
+  					status: 200,
+  					headers: { "Content-Type": "application/json" },
+  				}),
+  			));
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("typescript", "package");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("Remote templates path does not exist");
+  			}
+  		});
+
+  		it("handles non-object json response from GitHub API", async () => {
+  			const { resolveTemplatesDir } = await importTemplateRegistry();
+  			// Mock fetch to return a string
+  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+  				new Response(JSON.stringify("not an object"), {
+  					status: 200,
+  					headers: { "Content-Type": "application/json" },
+  				}),
+  			));
+
+  			let error: unknown;
+  			try {
+  				await resolveTemplatesDir("typescript", "package");
+  			} catch (e) {
+  				error = e;
+  			}
+
+  			expect(error).toBeInstanceOf(Error);
+  			if (error instanceof Error) {
+  				expect(error.message).toContain("Remote templates path does not exist");
+  			}
+  		});
+
+  		it("throws when downloaded directory does not exist", async () => {
   			const { resolveTemplatesDir } = await importTemplateRegistry();
   			// Mock fetch to indicate the subtree exists
   			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
@@ -437,7 +493,7 @@ describe("core/template-registry", () => {
 
   			// Mock downloadTemplate to succeed
   			const { downloadTemplate } = await import('giget');
-  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+  			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
   			// Mock isDirAsync to return false
   			const fsModule = await import('../../src/core/fs');
@@ -473,7 +529,7 @@ describe("core/template-registry", () => {
 
 			let error: unknown;
 			try {
-				await resolveTemplatesDir("typescript", "summon");
+				await resolveTemplatesDir("nonexistent-lang");
 			} catch (e) {
 				error = e;
 			}
@@ -491,16 +547,15 @@ describe("core/template-registry", () => {
 
 			// Mock downloadTemplate to succeed
 			const { downloadTemplate } = await import('giget');
-			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/grimoire-templates", source: "mock" });
+			vi.mocked(downloadTemplate).mockResolvedValue({ dir: "/tmp/yehle-templates", source: "mock" });
 
-			// Mock isDirAsync to return true only for the downloaded dir
+			// Mock isDirAsync to return true for the downloaded dir
 			const fsModule = await import('../../src/core/fs');
 			const isDirAsyncSpy = vi.spyOn(fsModule, 'isDirAsync');
-			isDirAsyncSpy.mockImplementation((path: string) => Promise.resolve(path === "/tmp/grimoire-templates"));
+			isDirAsyncSpy.mockResolvedValue(true);
 
-			const result = await resolveTemplatesDir("typescript", "summon");
-
-			expect(result).toBe("/tmp/grimoire-templates");
+			const result = await resolveTemplatesDir("typescript", "package");
+			expect(result).toBe("/tmp/yehle-templates/templates/typescript/package");
 
 			isDirAsyncSpy.mockRestore();
 		});
@@ -512,7 +567,7 @@ describe("core/template-registry", () => {
   		it("returns template names (subdirectory names) for an existing local resource directory", async () => {
   			setLocalModeEnv(true);
   			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const projectRoot = makeTempDir("grimoire-project-");
+  			const projectRoot = makeTempDir("yehle-project-");
   			const templatesRoot = path.join(projectRoot, "templates");
   			const lang: Language = "typescript" as Language;
   			const resource = "package";
@@ -532,16 +587,17 @@ describe("core/template-registry", () => {
   			const originalCwd = process.cwd();
   			process.chdir(projectRoot);
 
-  			try {
-  				const result = await listAvailableTemplates(lang, resource);
+			try {
+				const result = await listAvailableTemplates(lang, resource);
 
-  				// Should contain our template subdirectories...
-  				expect(result).toEqual(
-  					expect.arrayContaining(["basic", "advanced", "with-tests"]),
-  				);
-  				// ...but not the shared directory.
-  				expect(result).not.toContain("shared");
-  			} finally {
+				// Should contain our template subdirectories...
+				expect(result).toEqual(
+					expect.arrayContaining(["basic", "advanced", "with-tests"]),
+				);
+				// ...but not the shared directory (case insensitive).
+				expect(result).not.toContain("shared");
+				expect(result).not.toContain("Shared");
+			} finally {
   				process.chdir(originalCwd);
   			}
   		});
@@ -549,7 +605,7 @@ describe("core/template-registry", () => {
   		it("returns an empty array when the local resource directory does not exist", async () => {
   			setLocalModeEnv(true);
   			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const projectRoot = makeTempDir("grimoire-project-");
+  			const projectRoot = makeTempDir("yehle-project-");
   			const templatesRoot = path.join(projectRoot, "templates");
   			fs.mkdirSync(templatesRoot, { recursive: true });
 
@@ -570,7 +626,7 @@ describe("core/template-registry", () => {
   		it("returns an empty array when the local language directory exists but resource directory does not exist", async () => {
   			setLocalModeEnv(true);
   			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const projectRoot = makeTempDir("grimoire-project-");
+  			const projectRoot = makeTempDir("yehle-project-");
   			const templatesRoot = path.join(projectRoot, "templates");
   			const lang: Language = "typescript" as Language;
   			const resource = "api";
@@ -593,7 +649,7 @@ describe("core/template-registry", () => {
   		it("returns an empty array when the local resource directory exists but has no subdirectories", async () => {
   			setLocalModeEnv(true);
   			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const projectRoot = makeTempDir("grimoire-project-");
+  			const projectRoot = makeTempDir("yehle-project-");
   			const templatesRoot = path.join(projectRoot, "templates");
   			const lang: Language = "typescript" as Language;
   			const resource = "package";
@@ -617,7 +673,7 @@ describe("core/template-registry", () => {
   		it("returns an empty array when listChildDirs encounters a non-directory", async () => {
   			setLocalModeEnv(true);
   			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const projectRoot = makeTempDir("grimoire-project-");
+  			const projectRoot = makeTempDir("yehle-project-");
   			const templatesRoot = path.join(projectRoot, "templates");
   			const lang: Language = "typescript" as Language;
   			const resource = "package";
@@ -659,17 +715,18 @@ describe("core/template-registry", () => {
   			vi.unstubAllGlobals();
   		});
 
-  		it("lists remote template names from GitHub API and filters out shared", async () => {
-  			const { listAvailableTemplates } = await importTemplateRegistry();
-  			const lang: Language = "typescript" as Language;
-  			const resource = "package";
+		it("lists remote template names from GitHub API and filters out shared", async () => {
+			const { listAvailableTemplates } = await importTemplateRegistry();
+			const lang: Language = "typescript" as Language;
+			const resource = "package";
 
-  			const mockApiResponse = [
-  				{ type: "dir", name: "basic" },
-  				{ type: "file", name: "README.md" },
-  				{ type: "dir", name: "Advanced" },
-  				{ type: "dir", name: "shared" },
-  			];
+			const mockApiResponse = [
+				{ type: "dir", name: "basic" },
+				{ type: "file", name: "README.md" },
+				{ type: "dir", name: "Advanced" },
+				{ type: "dir", name: "shared" },
+				{ type: "dir", name: "Shared" },
+			];
 
   			const fetchMock = vi.fn().mockResolvedValue(
   				new Response(JSON.stringify(mockApiResponse), {
@@ -793,12 +850,12 @@ describe("core/template-registry", () => {
 			const { downloadTemplate } = await import('giget');
 			vi.mocked(downloadTemplate).mockRejectedValue(new Error("Network error"));
 
-  			let error: unknown;
-  			try {
-  				await resolveTemplatesDir("typescript", "summon");
-  			} catch (e) {
-  				error = e;
-  			}
+			let error: unknown;
+			try {
+				await resolveTemplatesDir("nonexistent-lang");
+			} catch (e) {
+				error = e;
+			}
 
   			expect(error).toBeInstanceOf(Error);
   			if (error instanceof Error) {
@@ -809,12 +866,13 @@ describe("core/template-registry", () => {
   		it("throws a descriptive error when remote download fails with non-Error", async () => {
   			const { resolveTemplatesDir } = await importTemplateRegistry();
   			// Mock fetch to indicate the subtree exists
-  			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-  				new Response(JSON.stringify([]), {
-  					status: 200,
-  					headers: { "Content-Type": "application/json" },
-  				}),
-  			));
+			vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+				new Response(JSON.stringify([]), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			));
+			;
 
 			// Mock downloadTemplate to throw a non-Error
 			const { downloadTemplate } = await import('giget');

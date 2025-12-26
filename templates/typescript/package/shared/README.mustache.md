@@ -4,7 +4,7 @@
 
 <div align="center">
   <p align="center" style="width: 80%; margin: auto">
-    <a href="https://github.com/agrawal-rohit/grimoire"><img alt="Made with Grimoire" src="https://img.shields.io/badge/made_with-grimoire-7452A3"></a>
+    <a href="https://github.com/agrawal-rohit/yehle"><img alt="Made with Yehle" src="https://img.shields.io/badge/made_with-yehle-d52b79"></a>
     {{#public}}
     <img alt="Status" src="https://img.shields.io/github/actions/workflow/status/{{ authorGitUsername }}/{{ name }}/ci.yml">
     <img alt="Downloads" src="https://img.shields.io/npm/dt/{{ name }}">

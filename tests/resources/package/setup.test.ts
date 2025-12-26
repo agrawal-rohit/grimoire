@@ -79,8 +79,8 @@ import {
 	applyTemplateModifications,
 	getRequiredGithubSecrets,
 	writePackageTemplateFiles,
-} from "../../../src/summon/package/setup";
-import { Language } from "../../../src/summon/package/config";
+} from "../../../src/resources/package/setup";
+import { Language } from "../../../src/resources/package/config";
 import fs from "node:fs";
 import {
 	copyDirSafeAsync,
@@ -91,7 +91,7 @@ import {
 } from "../../../src/core/fs";
 import { resolveTemplatesDir } from "../../../src/core/template-registry";
 
-describe("summon/package/setup", () => {
+describe("resources/package/setup", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
@@ -118,7 +118,7 @@ describe("summon/package/setup", () => {
 	describe("applyTemplateModifications", () => {
 		it("should render mustache templates with metadata", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -129,21 +129,21 @@ describe("summon/package/setup", () => {
 			const expectedMetadata = {
 				packageManagerVersion,
 				templateHasPlayground: true,
-				...summonConfig,
+				...generateConfig,
 			};
 
 			vi.mocked(resolveTemplatesDir).mockResolvedValue("/template/dir");
 			vi.mocked(isDirAsync).mockResolvedValue(true);
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 
-			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
+			await applyTemplateModifications(targetDir, generateConfig, packageManagerVersion);
 
 			expect(renderMustacheTemplates).toHaveBeenCalledWith(targetDir, expectedMetadata);
 		});
 
 		it("should remove public files if package is not public", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "default",
@@ -156,7 +156,7 @@ describe("summon/package/setup", () => {
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 			vi.mocked(removeFilesByBasename).mockResolvedValue();
 
-			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
+			await applyTemplateModifications(targetDir, generateConfig, packageManagerVersion);
 
 			expect(removeFilesByBasename).toHaveBeenCalledWith(targetDir, [
 				"CODE_OF_CONDUCT.md",
@@ -169,7 +169,7 @@ describe("summon/package/setup", () => {
 
 		it("should handle lang not in templatePublicPaths when removing public files", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: "javascript" as any,
 				name: "test-package",
 				template: "default",
@@ -182,7 +182,7 @@ describe("summon/package/setup", () => {
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 			vi.mocked(removeFilesByBasename).mockResolvedValue();
 
-			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
+			await applyTemplateModifications(targetDir, generateConfig, packageManagerVersion);
 
 			expect(removeFilesByBasename).toHaveBeenCalledWith(targetDir, [
 				"CODE_OF_CONDUCT.md",
@@ -194,7 +194,7 @@ describe("summon/package/setup", () => {
 
 		it("should not remove public files if package is public", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -206,7 +206,7 @@ describe("summon/package/setup", () => {
 			vi.mocked(isDirAsync).mockResolvedValue(true);
 			vi.mocked(renderMustacheTemplates).mockResolvedValue();
 
-			await applyTemplateModifications(targetDir, summonConfig, packageManagerVersion);
+			await applyTemplateModifications(targetDir, generateConfig, packageManagerVersion);
 
 			expect(removeFilesByBasename).not.toHaveBeenCalled();
 		});
@@ -259,7 +259,7 @@ describe("summon/package/setup", () => {
 	describe("writePackageTemplateFiles", () => {
 		it("should copy template directories", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -273,7 +273,7 @@ describe("summon/package/setup", () => {
 				.mockResolvedValueOnce("/templates/typescript/package/basic");
 			vi.mocked(copyDirSafeAsync).mockResolvedValue();
 
-			await writePackageTemplateFiles(targetDir, summonConfig);
+			await writePackageTemplateFiles(targetDir, generateConfig);
 
 			expect(resolveTemplatesDir).toHaveBeenCalledWith("shared");
 			expect(resolveTemplatesDir).toHaveBeenCalledWith(Language.TYPESCRIPT, "shared");
@@ -284,7 +284,7 @@ describe("summon/package/setup", () => {
 
 		it("should add MIT license if package is public and authorName is provided", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -300,7 +300,7 @@ describe("summon/package/setup", () => {
 			const mockDate = new Date(2023, 0, 1);
 			vi.spyOn(global, "Date").mockImplementation(() => mockDate as any);
 
-			await writePackageTemplateFiles(targetDir, summonConfig);
+			await writePackageTemplateFiles(targetDir, generateConfig);
 
 			expect(writeFileAsync).toHaveBeenCalledWith(
 				"/path/to/package/LICENSE",
@@ -312,7 +312,7 @@ describe("summon/package/setup", () => {
 
 		it("should not add license if package is not public", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -322,14 +322,14 @@ describe("summon/package/setup", () => {
 			vi.mocked(resolveTemplatesDir).mockResolvedValue("/templates/dir");
 			vi.mocked(copyDirSafeAsync).mockResolvedValue();
 
-			await writePackageTemplateFiles(targetDir, summonConfig);
+			await writePackageTemplateFiles(targetDir, generateConfig);
 
 			expect(writeFileAsync).not.toHaveBeenCalled();
 		});
 
 		it("should not add license if authorName is not provided", async () => {
 			const targetDir = "/path/to/package";
-			const summonConfig = {
+			const generateConfig = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
@@ -340,7 +340,7 @@ describe("summon/package/setup", () => {
 			vi.mocked(resolveTemplatesDir).mockResolvedValue("/templates/dir");
 			vi.mocked(copyDirSafeAsync).mockResolvedValue();
 
-			await writePackageTemplateFiles(targetDir, summonConfig);
+			await writePackageTemplateFiles(targetDir, generateConfig);
 
 			expect(writeFileAsync).not.toHaveBeenCalled();
 		});

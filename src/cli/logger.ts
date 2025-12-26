@@ -1,10 +1,15 @@
 import chalk from "chalk";
 import animatedIntro from "./animated-intro";
 
+// Log colors
+export const primaryText = (message: string) => chalk.hex("#d52b79")(message);
+export const defaultText = (message: string) => chalk.grey(message);
+export const dangerHighlight = (message: string) => chalk.bgRed(message);
+
 /** Logger utilities for the CLI. */
 export class Logger {
 	/**
-	 * Prints an introductory message with a "grimoire" badge.
+	 * Prints an introductory message.
 	 * @param message - The introductory message to display.
 	 */
 	async intro(message: string): Promise<void> {
@@ -17,7 +22,7 @@ export class Logger {
 	 */
 	error(message: string) {
 		console.log();
-		console.error(`${chalk.bgRed(" error ")} ${message}`);
+		console.error(`${dangerHighlight(" error ")} ${message}`);
 		console.log();
 		process.exit(1);
 	}
@@ -28,7 +33,7 @@ export class Logger {
 	 */
 	end(message: string) {
 		console.log();
-		console.error(`${chalk.bgRed(" end ")} ${message}`);
+		console.error(`${dangerHighlight(" end ")} ${message}`);
 		console.log();
 		process.exit(0);
 	}

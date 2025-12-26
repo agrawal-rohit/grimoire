@@ -26,6 +26,7 @@ vi.mock("../../../src/cli/logger", () => ({
 	default: {
 		intro: vi.fn(),
 	},
+	primaryText: vi.fn((text) => text),
 }));
 
 vi.mock("../../../src/cli/tasks", () => ({
@@ -59,12 +60,12 @@ vi.mock("../../../src/core/utils", () => ({
 	toSlug: vi.fn(),
 }));
 
-vi.mock("../../../src/summon/package/config", () => ({
-	getSummonPackageConfiguration: vi.fn(),
+vi.mock("../../../src/resources/package/config", () => ({
+	getGeneratePackageConfiguration: vi.fn(),
 	Language: { TYPESCRIPT: "typescript" },
 }));
 
-vi.mock("../../../src/summon/package/setup", () => ({
+vi.mock("../../../src/resources/package/setup", () => ({
 	applyTemplateModifications: vi.fn(),
 	createPackageDirectory: vi.fn(),
 	getRequiredGithubSecrets: vi.fn(),
@@ -72,8 +73,8 @@ vi.mock("../../../src/summon/package/setup", () => ({
 }));
 
 // Import after mocks
-import { runSummonPackage } from "../../../src/summon/package/command";
-import { type SummonPackageConfiguration, Language } from "../../../src/summon/package/config";
+import { generatePackage } from "../../../src/resources/package/command";
+import { type GeneratePackageConfiguration, Language } from "../../../src/resources/package/config";
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
@@ -82,15 +83,15 @@ import tasks from "../../../src/cli/tasks";
 import { initGitRepo, makeInitialCommit } from "../../../src/core/git";
 import { ensurePackageManager, getInstallScript } from "../../../src/core/pkg-manager";
 import { toSlug } from "../../../src/core/utils";
-import { getSummonPackageConfiguration } from "../../../src/summon/package/config";
+import { getGeneratePackageConfiguration } from "../../../src/resources/package/config";
 import {
 	applyTemplateModifications,
 	createPackageDirectory,
 	getRequiredGithubSecrets,
 	writePackageTemplateFiles,
-} from "../../../src/summon/package/setup";
+} from "../../../src/resources/package/setup";
 
-describe("summon/package/command", () => {
+describe("resources/package/command", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.spyOn(console, "log").mockImplementation(() => {});
@@ -100,17 +101,17 @@ describe("summon/package/command", () => {
 		vi.restoreAllMocks();
 	});
 
-	describe("runSummonPackage", () => {
+	describe("generatePackage", () => {
 		it("should call logger.intro to start the process", async () => {
 			// Arrange
-		  const mockConfig: SummonPackageConfiguration = {
+		  const mockConfig: GeneratePackageConfiguration = {
 				lang: "typescript" as any,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
 
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -124,22 +125,22 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
-	    expect(logger.intro).toHaveBeenCalledWith("starting summoning...");
+	    expect(logger.intro).toHaveBeenCalledWith("generating package...");
 		});
 
-		it("should retrieve summon package configuration", async () => {
+		it("should retrieve package configuration", async () => {
 			// Arrange
-			const options: Partial<SummonPackageConfiguration> = { lang: Language.TYPESCRIPT, name: "my-package" };
-			const mockConfig: SummonPackageConfiguration = {
+			const options: Partial<GeneratePackageConfiguration> = { lang: Language.TYPESCRIPT, name: "my-package" };
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "my-package",
 				template: "advanced",
 				public: true,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("my-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/my-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -153,41 +154,41 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage(options);
+			await generatePackage(options);
 
 			// Assert
-			expect(getSummonPackageConfiguration).toHaveBeenCalledWith(options);
+			expect(getGeneratePackageConfiguration).toHaveBeenCalledWith(options);
 		});
 
 		it("should throw an error if target directory is not empty", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["existing-file.txt"] as any);
 
 			// Act & Assert
-			await expect(runSummonPackage({})).rejects.toThrow(
+			await expect(generatePackage({})).rejects.toThrow(
 				"Target directory is not empty: /path/to/test-package",
 			);
 		});
 
 		it("should not throw an error if target directory exists but readdirSync throws", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(true);
@@ -204,18 +205,18 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act & Assert
-			await expect(runSummonPackage({})).resolves.not.toThrow();
+			await expect(generatePackage({})).resolves.not.toThrow();
 		});
 
 		it("should perform preflight checks including package manager availability", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -229,7 +230,7 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
 	    expect(tasks.runWithTasks).toHaveBeenCalledWith(
@@ -241,13 +242,13 @@ describe("summon/package/command", () => {
 
 		it("should prepare the package by creating directory, writing template files, and applying modifications", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -261,7 +262,7 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
 	    expect(tasks.runWithTasks).toHaveBeenCalledWith(
@@ -292,13 +293,13 @@ describe("summon/package/command", () => {
 
 		it("should finish up by initializing git, making initial commit, and fetching github secrets", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -312,7 +313,7 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
 	    expect(tasks.runWithTasks).toHaveBeenCalledWith(
@@ -331,14 +332,14 @@ describe("summon/package/command", () => {
 
 		it("should print next steps including cd, git push, secrets, and install command", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
 
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -352,11 +353,11 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
 	    expect(vi.mocked(console.log)).toHaveBeenCalledWith(
-				chalk.bold("Summoning complete. Next steps:"),
+				chalk.bold("Package generated successfully! Next steps:"),
 			);
 	    expect(vi.mocked(console.log)).toHaveBeenCalledWith();
 	    expect(vi.mocked(console.log)).toHaveBeenCalledWith(
@@ -378,14 +379,14 @@ describe("summon/package/command", () => {
 
 		it("should include github secrets in next steps when secrets are required", async () => {
 			// Arrange
-			const mockConfig: SummonPackageConfiguration = {
+			const mockConfig: GeneratePackageConfiguration = {
 				lang: Language.TYPESCRIPT,
 				name: "test-package",
 				template: "basic",
 				public: false,
 			};
 			const mockSecrets = ["SECRET_KEY", "API_TOKEN"];
-			vi.mocked(getSummonPackageConfiguration).mockResolvedValue(mockConfig);
+			vi.mocked(getGeneratePackageConfiguration).mockResolvedValue(mockConfig);
 			vi.mocked(toSlug).mockReturnValue("test-package");
 			vi.mocked(path.resolve).mockReturnValue("/path/to/test-package");
 			vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -399,7 +400,7 @@ describe("summon/package/command", () => {
 			vi.mocked(getInstallScript).mockReturnValue("npm install");
 
 			// Act
-			await runSummonPackage({});
+			await generatePackage({});
 
 			// Assert
 			expect(vi.mocked(console.log)).toHaveBeenCalledWith(

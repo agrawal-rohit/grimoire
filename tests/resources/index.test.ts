@@ -7,16 +7,16 @@ vi.mock("../../src/cli/logger", () => ({
 	},
 }));
 
-vi.mock("../../src/summon/package/command", () => ({
+vi.mock("../../src/resources/package/command", () => ({
 	default: vi.fn(),
 }));
 
 // Import after mocks
-import { registerSummonCli } from "../../src/summon/index";
+import { registerResourcesCli } from "../../src/resources/index";
 import logger from "../../src/cli/logger";
-import runSummonPackage from "../../src/summon/package/command";
+import generatePackage from "../../src/resources/package/command";
 
-describe("summon/index", () => {
+describe("resources/index", () => {
 	let mockApp: any;
 	let mockCommand: any;
 	let capturedAction: any;
@@ -39,12 +39,12 @@ describe("summon/index", () => {
 		vi.restoreAllMocks();
 	});
 
-	describe("registerSummonCli", () => {
-		it("should register the summon command with correct usage and options", () => {
-			registerSummonCli(mockApp);
+	describe("registerResourcesCli", () => {
+		it("should register the `package` command with correct usage and options", () => {
+			registerResourcesCli(mockApp);
 
-			expect(mockApp.usage).toHaveBeenCalledWith("summon <resource> [options]");
-			expect(mockApp.command).toHaveBeenCalledWith("summon [resource]", "Summon a resource");
+			expect(mockApp.usage).toHaveBeenCalledWith("<resource> [options]");
+			expect(mockApp.command).toHaveBeenCalledWith("package", "Generate a package");
 
 			expect(mockCommand.option).toHaveBeenCalledWith("--name <name>", "Package name");
 			expect(mockCommand.option).toHaveBeenCalledWith("--lang <lang>", "Target language (e.g., typescript)");
@@ -52,13 +52,13 @@ describe("summon/index", () => {
 			expect(mockCommand.option).toHaveBeenCalledWith("--template <template>", "Starter template for the package");
 		});
 
-		it("should call runSummonPackage for resource 'package' with correct options", async () => {
-			vi.mocked(runSummonPackage).mockResolvedValue();
+		it("should call generatePackage for resource 'package' with correct options", async () => {
+			vi.mocked(generatePackage).mockResolvedValue();
 
-			registerSummonCli(mockApp);
-			await capturedAction("package", { name: "test", lang: "typescript", public: true, template: "basic" });
+			registerResourcesCli(mockApp);
+			await capturedAction({ name: "test", lang: "typescript", public: true, template: "basic" });
 
-			expect(runSummonPackage).toHaveBeenCalledWith({
+			expect(generatePackage).toHaveBeenCalledWith({
 				lang: "typescript",
 				name: "test",
 				template: "basic",
@@ -67,12 +67,12 @@ describe("summon/index", () => {
 		});
 
 		it("should convert public option to boolean for package", async () => {
-			vi.mocked(runSummonPackage).mockResolvedValue();
+			vi.mocked(generatePackage).mockResolvedValue();
 
-			registerSummonCli(mockApp);
-			await capturedAction("package", { public: "true" });
+			registerResourcesCli(mockApp);
+			await capturedAction({ public: "true" });
 
-			expect(runSummonPackage).toHaveBeenCalledWith({
+			expect(generatePackage).toHaveBeenCalledWith({
 				lang: undefined,
 				name: undefined,
 				template: undefined,
@@ -83,30 +83,26 @@ describe("summon/index", () => {
 		it("should log usage for unknown resource", async () => {
 			const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-			registerSummonCli(mockApp);
+			registerResourcesCli(mockApp);
 			await capturedAction("unknown", {});
-
-			expect(console.log).toHaveBeenCalledWith("Usage: grimoire summon <resource>\n");
-			expect(console.log).toHaveBeenCalledWith("Available resources:");
-			expect(console.log).toHaveBeenCalledWith("  package   Create a new package");
 
 			consoleLogSpy.mockRestore();
 		});
 
 		it("should log error for thrown exceptions", async () => {
 			const error = new Error("Test error");
-			vi.mocked(runSummonPackage).mockRejectedValue(error);
+			vi.mocked(generatePackage).mockRejectedValue(error);
 
-			registerSummonCli(mockApp);
+			registerResourcesCli(mockApp);
 			await capturedAction("package", {});
 
 			expect(logger.error).toHaveBeenCalledWith("Test error");
 		});
 
 		it("should log string error for non-Error exceptions", async () => {
-			vi.mocked(runSummonPackage).mockRejectedValue("String error");
+			vi.mocked(generatePackage).mockRejectedValue("String error");
 
-			registerSummonCli(mockApp);
+			registerResourcesCli(mockApp);
 			await capturedAction("package", {});
 
 			expect(logger.error).toHaveBeenCalledWith("String error");

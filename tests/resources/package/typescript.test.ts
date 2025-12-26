@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateTypescriptPackageName } from "../../../src/summon/package/typescript";
+import { validateTypescriptPackageName } from "../../../src/resources/package/typescript";
 
 describe("validateTypescriptPackageName", () => {
 	it("should return true for a simple valid package name", () => {

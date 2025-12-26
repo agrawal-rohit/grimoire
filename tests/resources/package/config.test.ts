@@ -48,7 +48,7 @@ vi.mock("../../../src/core/utils", () => ({
 
 // Import after mocks
 import {
-	getSummonPackageConfiguration,
+	getGeneratePackageConfiguration,
 	getPackageLanguage,
 	getPackageName,
 	getPackageTemplate,
@@ -57,7 +57,7 @@ import {
 	promptAuthorGitEmail,
 	promptAuthorGitUsername,
 	Language,
-} from "../../../src/summon/package/config";
+} from "../../../src/resources/package/config";
 import prompts from "../../../src/cli/prompts";
 import tasks from "../../../src/cli/tasks";
 import { getGitEmail, getGitUsername } from "../../../src/core/git";
@@ -65,7 +65,7 @@ import { validatePackageName } from "../../../src/core/pkg-manager";
 import { listAvailableTemplates } from "../../../src/core/template-registry";
 import { capitalizeFirstLetter, toSlug } from "../../../src/core/utils";
 
-describe("summon/package/config", () => {
+describe("resources/package/config", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.spyOn(console, "log").mockImplementation(() => {});
@@ -76,12 +76,12 @@ describe("summon/package/config", () => {
 		globalThis.mockIsLocalMode = false;
 	});
 
-	describe("getSummonPackageConfiguration", () => {
+	describe("getGeneratePackageConfiguration", () => {
 		it("should gather configuration from cliFlags without prompting for author info when not public", async () => {
 			vi.mocked(validatePackageName).mockImplementation(() => {});
 			vi.mocked(listAvailableTemplates).mockResolvedValue(["basic"]);
 
-			const config = await getSummonPackageConfiguration({
+			const config = await getGeneratePackageConfiguration({
 				lang: Language.TYPESCRIPT,
 				name: "my-package",
 				template: "basic",
@@ -113,7 +113,7 @@ describe("summon/package/config", () => {
 			vi.mocked(prompts.textInput).mockResolvedValueOnce("johndoe");
 			vi.mocked(toSlug).mockReturnValue("johndoe");
 
-			const config = await getSummonPackageConfiguration({ public: true });
+			const config = await getGeneratePackageConfiguration({ public: true });
 
 			expect(config.public).toBe(true);
 			expect(config.authorName).toBe("John Doe");

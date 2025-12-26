@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
-import logger from "../../cli/logger";
+import logger, { primaryText } from "../../cli/logger";
 import tasks from "../../cli/tasks";
 import { initGitRepo, makeInitialCommit } from "../../core/git";
 import {
@@ -12,8 +12,8 @@ import {
 } from "../../core/pkg-manager";
 import { toSlug } from "../../core/utils";
 import {
-	getSummonPackageConfiguration,
-	type SummonPackageConfiguration,
+	type GeneratePackageConfiguration,
+	getGeneratePackageConfiguration,
 } from "./config";
 import {
 	applyTemplateModifications,
@@ -22,14 +22,13 @@ import {
 	writePackageTemplateFiles,
 } from "./setup";
 
-/** Entry point for "grimoire summon package".*/
-export async function runSummonPackage(
-	options: Partial<SummonPackageConfiguration> = {},
+export async function generatePackage(
+	options: Partial<GeneratePackageConfiguration> = {},
 ): Promise<void> {
-	await logger.intro("starting summoning...");
+	await logger.intro("generating package...");
 
 	// Gather configuration (skip prompts when options are provided)
-	const summonConfig = await getSummonPackageConfiguration({
+	const generateConfig = await getGeneratePackageConfiguration({
 		lang: options.lang,
 		name: options.name,
 		template: options.template,
@@ -38,10 +37,10 @@ export async function runSummonPackage(
 
 	let packageManagerVersion = "";
 	const packageManager: PackageManager =
-		LANGUAGE_PACKAGE_MANAGER[summonConfig.lang];
+		LANGUAGE_PACKAGE_MANAGER[generateConfig.lang];
 	const resolvedTargetDir = path.resolve(
 		process.cwd(),
-		toSlug(summonConfig.name),
+		toSlug(generateConfig.name),
 	);
 
 	// Preflight checks
@@ -73,14 +72,14 @@ export async function runSummonPackage(
 			task: async () => {
 				targetDir = await createPackageDirectory(
 					process.cwd(),
-					toSlug(summonConfig.name),
+					toSlug(generateConfig.name),
 				);
 			},
 		},
 		{
-			title: `Add "${summonConfig.template}" template`,
+			title: `Add "${generateConfig.template}" template`,
 			task: async () => {
-				await writePackageTemplateFiles(targetDir, summonConfig);
+				await writePackageTemplateFiles(targetDir, generateConfig);
 			},
 		},
 		{
@@ -88,7 +87,7 @@ export async function runSummonPackage(
 			task: async () => {
 				await applyTemplateModifications(
 					targetDir,
-					summonConfig,
+					generateConfig,
 					packageManagerVersion,
 				);
 			},
@@ -121,16 +120,16 @@ export async function runSummonPackage(
 
 	let currentStep = 1;
 	console.log();
-	console.log(chalk.bold("Summoning complete. Next steps:"));
+	console.log(chalk.bold("Package generated successfully! Next steps:"));
 	console.log();
-	const cdCommand = `cd ${toSlug(summonConfig.name)}`;
+	const cdCommand = `cd ${toSlug(generateConfig.name)}`;
 	console.log(
-		`  ${currentStep}. Enter your package directory using ${chalk.magentaBright(cdCommand)},`,
+		`  ${currentStep}. Enter your package directory using ${primaryText(cdCommand)},`,
 	);
 	currentStep += 1;
 
 	console.log(
-		`  ${currentStep}. Push your initial commit with ${chalk.magentaBright("git push -u origin main")}`,
+		`  ${currentStep}. Push your initial commit with ${primaryText("git push -u origin main")}`,
 	);
 	currentStep += 1;
 
@@ -140,12 +139,12 @@ export async function runSummonPackage(
 		);
 		currentStep += 1;
 		githubSecrets.forEach((secret) => {
-			console.log(`    - ${chalk.magentaBright(secret)}`);
+			console.log(`    - ${primaryText(secret)}`);
 		});
 	}
 
 	console.log(
-		`  ${currentStep}. Install dependencies with ${chalk.magentaBright(installCmd)}`,
+		`  ${currentStep}. Install dependencies with ${primaryText(installCmd)}`,
 	);
 	currentStep += 1;
 
@@ -153,9 +152,9 @@ export async function runSummonPackage(
 
 	console.log();
 	console.log(
-		`Stuck? Open an issue at ${chalk.magentaBright("https://github.com/agrawal-rohit/grimoire/issues")}`,
+		`Stuck? Open an issue at ${primaryText("https://github.com/agrawal-rohit/yehle/issues")}`,
 	);
 	console.log();
 }
 
-export default runSummonPackage;
+export default generatePackage;

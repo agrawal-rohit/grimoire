@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to `grimoire`! This guide will help you get started with the development process, from setting up your environment to submitting changes.
+Thanks for your interest in contributing to `yehle`! This guide will help you get started with the development process, from setting up your environment to submitting changes.
 
 ## Table of Contents
 
@@ -19,9 +19,9 @@ Thanks for your interest in contributing to `grimoire`! This guide will help you
 ## Getting Help
 
 If you have questions, ideas, or need help:
-- Search existing [GitHub Discussions](https://github.com/agrawal-rohit/grimoire/discussions) first
+- Search existing [GitHub Discussions](https://github.com/agrawal-rohit/yehle/discussions) first
 - Open a new discussion for questions and proposals
-- Create a [GitHub Issue](https://github.com/agrawal-rohit/grimoire/issues) for bug reports
+- Create a [GitHub Issue](https://github.com/agrawal-rohit/yehle/issues) for bug reports
 
 Please be specific about your environment and include steps to reproduce issues when reporting bugs.
 
@@ -89,7 +89,7 @@ Small documentation fixes (typos, clarifications) are always welcome!
 
 ## Release Process
 
-This project uses a simple tag-driven release workflow powered by [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). Push a tag, and [Github Actions](https://github.com/features/actions) handles the rest. This same workflow is configured for projects scaffolded with `grimoire`.
+This project uses a simple tag-driven release workflow powered by [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). Push a tag, and [Github Actions](https://github.com/features/actions) handles the rest. This same workflow is configured for projects scaffolded with `yehle`.
 
 ### Pre-requisites
 
@@ -137,8 +137,8 @@ When you push a tag, the release workflow kicks in and:
 After pushing a pre-release tag, you can test it before cutting a stable release:
 
 ```bash
-# For grimoire itself
-npx @agrawalrohit/grimoire@rc --help
+# For yehle itself
+npx yehle@rc --help
 
 # For your scaffolded projects
 npm install my-package@rc
@@ -164,7 +164,7 @@ git push origin v1.2.3
 
 ## Proposing Templates
 
-Grimoire uses a filesystem-based template registry organized by language and resource type. When proposing new templates, follow this hierarchy:
+`yehle` uses a filesystem-based template registry organized by language and resource type. When proposing new templates, follow this hierarchy:
 
 ### Template Structure
 
@@ -188,7 +188,7 @@ Files are copied in this order (files with the same name are overriden based on 
 
 - Use `.mustache` extension for templated files (e.g., `package.mustache.json`)
 - Use mustache syntax for variables: `{{ variableName }}`
-- The `summon` configuration is passed as the mustache context
+- The `<resource>` configuration is passed as the mustache context
 - Non-mustache files are copied as-is
 
 ### Proposing New Templates
@@ -203,7 +203,7 @@ When proposing a new template:
 ## Security
 
 - **Do not** report security vulnerabilities in public issues
-- Use GitHub's [private vulnerability reporting](https://github.com/agrawal-rohit/grimoire/security/advisories)
+- Use GitHub's [private vulnerability reporting](https://github.com/agrawal-rohit/yehle/security/advisories)
 
 ## Maintainer Guidelines
 

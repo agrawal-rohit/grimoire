@@ -1,10 +1,10 @@
-import chalk from "chalk";
 import {
 	type DefaultRenderer,
 	Listr,
 	type ListrTaskWrapper,
 	type SimpleRenderer,
 } from "listr2";
+import { defaultText, primaryText } from "./logger";
 
 /** A single executable subtask. */
 export type Subtask = {
@@ -51,7 +51,7 @@ export async function runWithTasks(
 	const tasks = new Listr(
 		[
 			{
-				title: chalk.magentaBright(goalTitle),
+				title: primaryText(goalTitle),
 				task: async (
 					_ctx: unknown,
 					_task: ListrTaskWrapper<
@@ -66,7 +66,7 @@ export async function runWithTasks(
 					}
 
 					const subTasks = subtasks.map(({ title, task: run }) => ({
-						title: chalk.grey(title),
+						title: defaultText(title),
 						task: async () => {
 							await run();
 						},

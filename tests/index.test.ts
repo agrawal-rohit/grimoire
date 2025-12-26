@@ -11,14 +11,14 @@ vi.mock("cac", () => ({
 	default: vi.fn(() => mockApp),
 }));
 
-vi.mock("../src/summon", () => ({
-	registerSummonCli: vi.fn(),
+vi.mock("../src/resources", () => ({
+	registerResourcesCli: vi.fn(),
 }));
 
 // Import after mocks
 import run from "../src/index";
 import cac from "cac";
-import { registerSummonCli } from "../src/summon";
+import { registerResourcesCli } from "../src/resources";
 
 describe("index", () => {
 	beforeEach(() => {
@@ -30,18 +30,18 @@ describe("index", () => {
 	});
 
 	describe("run", () => {
-		it("should initialize CAC with correct name and register summon CLI", () => {
-			vi.stubGlobal("process", { argv: ["node", "grimoire"] });
+		it("should initialize CAC with correct name and register the resources CLI", () => {
+			vi.stubGlobal("process", { argv: ["node", "yehle"] });
 
 			run();
 
-			expect(cac).toHaveBeenCalledWith(" grimoire");
-			expect(registerSummonCli).toHaveBeenCalledWith(mockApp);
+			expect(cac).toHaveBeenCalledWith("yehle");
+			expect(registerResourcesCli).toHaveBeenCalledWith(mockApp);
 			expect(mockApp.help).toHaveBeenCalled();
 		});
 
 		it("should output help when no arguments are provided", () => {
-			vi.stubGlobal("process", { argv: ["node", "grimoire"] });
+			vi.stubGlobal("process", { argv: ["node", "yehle"] });
 
 			run();
 
@@ -50,7 +50,7 @@ describe("index", () => {
 		});
 
 		it("should parse arguments when provided", () => {
-			const argv = ["node", "grimoire", "summon", "package"];
+			const argv = ["node", "yehle", "package"];
 			vi.stubGlobal("process", { argv });
 			vi.mocked(mockApp.parse).mockImplementation(() => {});
 
@@ -61,7 +61,7 @@ describe("index", () => {
 		});
 
 		it("should handle parse errors by showing help for the command", () => {
-			const argv = ["node", "grimoire", "summon", "package"];
+			const argv = ["node", "yehle", "package"];
 			vi.stubGlobal("process", { argv });
 			vi.mocked(mockApp.parse)
 				.mockImplementationOnce(() => {
@@ -77,7 +77,7 @@ describe("index", () => {
 		});
 
 		it("should fallback to global help if command help also fails", () => {
-			const argv = ["node", "grimoire", "summon", "package"];
+			const argv = ["node", "yehle", "package"];
 			vi.stubGlobal("process", { argv });
 			vi.mocked(mockApp.parse)
 				.mockImplementationOnce(() => {
@@ -95,13 +95,13 @@ describe("index", () => {
 		});
 
 		it("should filter out empty arguments", () => {
-			const argv = ["node", "grimoire", "", "summon", "", "package"];
-			vi.stubGlobal("process", { argv: ["node", "grimoire", "summon", "package"] });
+			const argv = ["node", "yehle", "", "package"];
+			vi.stubGlobal("process", { argv: ["node", "yehle", "package"] });
 			vi.mocked(mockApp.parse).mockImplementation(() => {});
 
 			run();
 
-			expect(mockApp.parse).toHaveBeenCalledWith(["node", "grimoire", "summon", "package"]);
+			expect(mockApp.parse).toHaveBeenCalledWith(["node", "yehle", "package"]);
 		});
 	});
 });

@@ -2,6 +2,7 @@ import readline from "node:readline";
 import chalk from "chalk";
 import { stripAnsi } from "consola/utils";
 import { sleep, truncate } from "../core/utils";
+import { primaryText } from "./logger";
 
 type Message = string | Promise<string>;
 
@@ -23,7 +24,7 @@ export type AnimatedIntroOptions = {
 export async function animatedIntro(
 	msg: Message | Message[] = [],
 	{
-		title = "Grimoire",
+		title = "Yehle",
 		stdout = process.stdout,
 		frameDelayMs = 150,
 	}: AnimatedIntroOptions = {},
@@ -57,7 +58,7 @@ export async function animatedIntro(
 	};
 
 	/* ---------------- layout constants ---------------- */
-	const label = chalk.bold(chalk.magentaBright(`${title}:`));
+	const label = chalk.bold(primaryText(`${title}`));
 	const GAP = "  ";
 	const LEFT_WIDTH = 13;
 	const TOP = "╭─────┬─────╮";
