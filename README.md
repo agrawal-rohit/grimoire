@@ -172,10 +172,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to report issu
 
 If you create a project with `yehle`, you can show support by adding this badge to your README:
 
-![Made with Yehle](https://img.shields.io/badge/made_with-yehle-d52b79)
+![Made with Yehle](https://img.shields.io/badge/made_with-yehle-FEA624)
 
 ```html
-<a href="https://github.com/agrawal-rohit/yehle"><img alt="Made with Yehle" src="https://img.shields.io/badge/made_with-yehle-d52b79"></a>
+<a href="https://github.com/agrawal-rohit/yehle"><img alt="Made with Yehle" src="https://img.shields.io/badge/made_with-yehle-FEA624"></a>
 ```
 
 ## License

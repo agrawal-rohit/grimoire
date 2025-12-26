@@ -124,7 +124,7 @@ describe('cli/tasks', () => {
 
       await runWithTasks(goalTitle)
 
-      expect(chalk.hex).toHaveBeenCalledWith('#d52b79')
+      expect(chalk.hex).toHaveBeenCalledWith('#FEA624')
       const colorFn = (chalk.hex as any).mock.results[0].value
       expect(colorFn).toHaveBeenCalledWith(goalTitle)
     })

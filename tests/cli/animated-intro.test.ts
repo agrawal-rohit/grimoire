@@ -401,54 +401,9 @@ describe('cli/animated-intro', () => {
     })
   })
 
-  describe('token truncation', () => {
-    test('should truncate tokens longer than 5 characters in center5', async () => {
-      // This tests line 81: raw.length > 5 branch (raw.slice(0, 5))
-      // Mock stripAnsi to consistently return text > 5 chars
-      vi.mocked(stripAnsi).mockImplementation(() => 'LongTextOver5Chars')
-
-      await animatedIntro('Test', { frameDelayMs: 10 })
-
-      expect(stdoutWriteSpy).toHaveBeenCalled()
-
-      // Reset mock
-      vi.mocked(stripAnsi).mockImplementation((text) => text)
-    })
-
-    test('should handle short tokens that do not need truncation', async () => {
-      // Test the raw.length <= 5 branch (returns raw without slicing)
-      vi.mocked(stripAnsi).mockImplementation(() => 'ABC')
-
-      await animatedIntro('X', { frameDelayMs: 10 })
-
-      expect(stdoutWriteSpy).toHaveBeenCalled()
-
-      // Reset mock
-      vi.mocked(stripAnsi).mockImplementation((text) => text)
-    })
-  })
-
-  describe('buildLines edge cases', () => {
-    test('should handle paddedRight array access safely', async () => {
-      // Line 107 has a ?? "" operator for defensive coding
-      // This tests that paddedRight[i] works correctly even at boundaries
-      const customStdout = {
-        write: vi.fn(),
-        columns: 150
-      }
-
-      await animatedIntro('Testing boundary', {
-        stdout: customStdout as any,
-        frameDelayMs: 10
-      })
-
-      expect(customStdout.write).toHaveBeenCalled()
-    })
-  })
-
   describe('renderer line handling edge cases', () => {
     test('should handle renderer with varying line counts', async () => {
-      // The buildLines always returns 4 lines, but the renderer's paint
+      // The lines array now returns 4 lines with top padding, but the renderer's paint
       // function has logic to handle < height and > height scenarios
       // These are defensive branches that protect against edge cases
       const customStdout = {

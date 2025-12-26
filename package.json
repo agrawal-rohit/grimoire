@@ -1,7 +1,7 @@
 {
 	"version": "0.0.8",
 	"name": "yehle",
-	"description": "An opinionated book of spells for the modern developer",
+	"description": "An opinionated scaffolding CLI for the modern developer",
 	"bin": "./bin/cli.js",
 	"files": [
 		"dist",
