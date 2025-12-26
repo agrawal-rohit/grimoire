@@ -15,7 +15,7 @@
 </div>
 
 <div align="center">
-  <p>✨ An opinionated <strong>book of spells</strong> for modern developers ✨</p>
+  <p>✨ An opinionated <strong>scaffolding CLI</strong> for modern developers ✨</p>
 </div>
 
 <br />
