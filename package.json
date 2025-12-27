@@ -34,7 +34,6 @@
 		"consola": "^3.2.3",
 		"giget": "^2.0.0",
 		"listr2": "^9.0.5",
-		"log-update": "^7.0.2",
 		"mustache": "^4.2.0",
 		"spdx-license-list": "^6.10.0",
 		"validate-npm-package-name": "7.0.1"
@@ -44,8 +43,8 @@
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
 		"@stryker-mutator/core": "^9.4.0",
-		"@stryker-mutator/vitest-runner": "^9.4.0",
 		"@stryker-mutator/typescript-checker": "^9.4.0",
+		"@stryker-mutator/vitest-runner": "^9.4.0",
 		"@types/jest": "^30.0.0",
 		"@types/mustache": "^4.2.5",
 		"@types/node": "^24.3.1",
