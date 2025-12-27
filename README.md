@@ -26,7 +26,9 @@
 
 <br />
 
-`yehle` is a CLI command for scaffolding modern software projects by taking caring of common [yak-shaving](https://softwareengineering.stackexchange.com/a/388236) operations through opinionated templates and tooling configurations. I found myself spending a frustrating amount of time configuring every new library, monorepo, or microservice with _"just the right tooling setup"_ before I could start writing the logic that's actually fun. Add on the fact that different languages serve a particular use-case better than others _(with each language having it's own tooling ecosystem that keeps evolving)_ - the inevitable duplication of work was too annoying to deal with everyday.
+`yehle` is a CLI tool for scaffolding modern software projects by performing common [yak-shaving](https://softwareengineering.stackexchange.com/a/388236) operations through opinionated templates, sensible tooling setup, and development best practices.
+
+I would usually spend hours re-configuring the _"same old tooling and workflow setup"_ for every new project instead of focusing on the actual functionality. `yehle` eliminates that duplicative work by generating a project structure _(based on my personal flavour)_ with essential pieces already configured _(pre-commit hooks, a linter and formatter, build and release workflows, basic documentation, etc.)_ - thus allowing me to build things I'm interested in without the distractions.
 
 ## Table of Contents
 
@@ -51,8 +53,8 @@
 * Automatically generated Readme with badges through [shields.io][shields]
 * Automatically generated MIT license with [spdx][spdx-license-list]
 * Automatically generated community files _(contribution guidelines, issue templates, and pull request checklists)_
-* A pre-configured [release process](#CONTRIBUTING.md#release-process) for preview and production releases
-* Sensible [templates][] for common use cases encountered in modern development
+* A pre-configured [release process](CONTRIBUTING.md#release-process) for preview and production releases
+* Opinionated [templates][] that cover common use cases encountered in modern software development
 
 [github-actions]: https://github.com/features/actions
 [shields]: https://shields.io/
@@ -62,11 +64,9 @@
 
 ## Supported Languages
 
-In addition to the general tooling listed above, `yehle` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
+In addition to the general features listed above, `yehle` also configures language-specific tooling to enable unit testing, type-safety, consistent code linting/formatting, and _much more_. It currently supports the following languages:
 
 ### Typescript
-
-Great choice when building for the web _(UI libraries and frameworks for the browser. Can also be a good server-side language when executed in a JS runtime like [node][], [bun][], or [deno][])_.
 
 * Unit testing with [vitest][] and test quality checks using [stryker][]
 * Commit linting with [commitlint][]
@@ -88,8 +88,6 @@ Great choice when building for the web _(UI libraries and frameworks for the bro
 [git-cliff]: https://git-cliff.org/
 [typescript]: https://github.com/microsoft/TypeScript
 [node]: https://nodejs.org
-[bun]: https://bun.sh/
-[deno]: https://deno.com/
 [tsdown]: https://tsdown.dev/
 [npm]: https://www.npmjs.com/
 [pnpm]: https://pnpm.io/
